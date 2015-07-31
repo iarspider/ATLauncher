@@ -1,21 +1,11 @@
-ATLauncher
+JULauncher
 ====================================
-
-[![Build Status](https://build.atlcdn.net/buildStatus/icon?job=ATLauncher)](https://build.atlcdn.net/job/ATLauncher/)
 
 ### What is it?
 
-ATLauncher is a Launcher for Minecraft which integrates multiple different ModPacks to allow you to download and install ModPacks easily and quickly.
+JULauncher is a Launcher for Minecraft which integrates multiple different ModPacks to allow you to download and install ModPacks easily and quickly.
 
-
-### Links
-[ATLauncher Website](https://www.atlauncher.com)
-
-[ATLauncher Facebook](http://www.facebook.com/ATLauncher)
-
-[ATLauncher Reddit](http://www.reddit.com/r/ATLauncher)
-
-[ATLauncher Twitter](http://twitter.com/ATLauncher)
+This launcher is based on [ATLauncher](https://github.com/ATLauncher/ATLauncher/) by [RyanTheAllmighty](https://github.com/RyanTheAllmighty)
 
 
 ### Coding Standards & Styling Guidelines
@@ -95,10 +85,6 @@ Minor should be incremented when small changes/features are made.
 Revision should be incremented when there are no new features and only contains bug fixes for the previous minor.
 
 Build is used for beta releases allowing you to have higher version numbers but force users to update when the real release comes.
-
-### Need Help/Have Questions?
-
-If you have questions please don't hesitate to [contact us](https://www.atlauncher.com/contact-us/)
 
 ### License
 
