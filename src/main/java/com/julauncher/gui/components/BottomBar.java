@@ -1,6 +1,6 @@
 /*
- * ATLauncher - https://github.com/ATLauncher/ATLauncher
- * Copyright (C) 2013 ATLauncher
+ * JULauncher - https://github.com/iarspider/JULauncher
+ * Copyright (C) 2015 JULauncher
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,25 +63,25 @@ public abstract class BottomBar extends JPanel {
         });
         facebookIcon.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                LogManager.info("Opening Up ATLauncher Facebook Page");
+                LogManager.info("Opening Up JULauncher Facebook Page");
                 Utils.openBrowser("http://www.facebook.com/ATLauncher");
             }
         });
         githubIcon.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                LogManager.info("Opening Up ATLauncher GitHub Page");
-                Utils.openBrowser("https://github.com/ATLauncher/ATLauncher");
+                LogManager.info("Opening Up JULauncher GitHub Page");
+                Utils.openBrowser("https://github.com/iarspider/JULauncher");
             }
         });
         redditIcon.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                LogManager.info("Opening Up ATLauncher Reddit Page");
+                LogManager.info("Opening Up JULauncher Reddit Page");
                 Utils.openBrowser("http://www.reddit.com/r/ATLauncher");
             }
         });
         twitterIcon.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                LogManager.info("Opening Up ATLauncher Twitter Page");
+                LogManager.info("Opening Up JULauncher Twitter Page");
                 Utils.openBrowser("http://www.twitter.com/ATLauncher");
             }
         });

@@ -1,6 +1,6 @@
 /*
- * ATLauncher - https://github.com/ATLauncher/ATLauncher
- * Copyright (C) 2013 ATLauncher
+ * JULauncher - https://github.com/iarspider/JULauncher
+ * Copyright (C) 2015 JULauncher
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 package com.julauncher.data;
 
 /**
- * Response to an API call made to ATLauncher servers. This contains information including if there was an error, the
+ * Response to an API call made to JULauncher servers. This contains information including if there was an error, the
  * response code of the request, the error message (if any) and the data received (if any) from the API.
  */
 public class APIResponseInt {
