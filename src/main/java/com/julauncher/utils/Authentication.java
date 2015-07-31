@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.utils;
+package com.julauncher.utils;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.data.Account;
-import com..julauncher.data.Downloadable;
-import com..julauncher.data.LoginResponse;
-import com..julauncher.data.mojang.api.ProfileResponse;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.data.Account;
+import com.julauncher.data.Downloadable;
+import com.julauncher.data.LoginResponse;
+import com.julauncher.data.mojang.api.ProfileResponse;
 import com.mojang.authlib.Agent;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.exceptions.AuthenticationUnavailableException;

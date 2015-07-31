@@ -15,18 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.tabs;
+package com.julauncher.gui.tabs;
 
-import com..julauncher.App;
-import com..julauncher.data.Language;
-import com..julauncher.evnt.listener.RelocalizationListener;
-import com..julauncher.evnt.manager.RelocalizationManager;
-import com..julauncher.evnt.manager.SettingsManager;
-import com..julauncher.gui.tabs.settings.GeneralSettingsTab;
-import com..julauncher.gui.tabs.settings.JavaSettingsTab;
-import com..julauncher.gui.tabs.settings.LoggingSettingsTab;
-import com..julauncher.gui.tabs.settings.NetworkSettingsTab;
-import com..julauncher.gui.tabs.settings.ToolsSettingsTab;
+import com.julauncher.App;
+import com.julauncher.data.Language;
+import com.julauncher.evnt.listener.RelocalizationListener;
+import com.julauncher.evnt.manager.RelocalizationManager;
+import com.julauncher.evnt.manager.SettingsManager;
+import com.julauncher.gui.tabs.settings.GeneralSettingsTab;
+import com.julauncher.gui.tabs.settings.JavaSettingsTab;
+import com.julauncher.gui.tabs.settings.LoggingSettingsTab;
+import com.julauncher.gui.tabs.settings.NetworkSettingsTab;
+import com.julauncher.gui.tabs.settings.ToolsSettingsTab;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;

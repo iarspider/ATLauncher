@@ -15,34 +15,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.workers;
+package com.julauncher.workers;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.LogManager;
-import com..julauncher.data.APIResponse;
-import com..julauncher.data.DisableableMod;
-import com..julauncher.data.Downloadable;
-import com..julauncher.data.Instance;
-import com..julauncher.data.Language;
-import com..julauncher.data.Pack;
-import com..julauncher.data.PackVersion;
-import com..julauncher.data.Type;
-import com..julauncher.data.json.Action;
-import com..julauncher.data.json.CaseType;
-import com..julauncher.data.json.DownloadType;
-import com..julauncher.data.json.Mod;
-import com..julauncher.data.json.ModType;
-import com..julauncher.data.json.Version;
-import com..julauncher.data.mojang.AssetIndex;
-import com..julauncher.data.mojang.AssetObject;
-import com..julauncher.data.mojang.DateTypeAdapter;
-import com..julauncher.data.mojang.EnumTypeAdapterFactory;
-import com..julauncher.data.mojang.FileTypeAdapter;
-import com..julauncher.data.mojang.Library;
-import com..julauncher.data.mojang.MojangConstants;
-import com..julauncher.gui.dialogs.ModsChooser;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.LogManager;
+import com.julauncher.data.APIResponse;
+import com.julauncher.data.DisableableMod;
+import com.julauncher.data.Downloadable;
+import com.julauncher.data.Instance;
+import com.julauncher.data.Language;
+import com.julauncher.data.Pack;
+import com.julauncher.data.PackVersion;
+import com.julauncher.data.Type;
+import com.julauncher.data.json.Action;
+import com.julauncher.data.json.CaseType;
+import com.julauncher.data.json.DownloadType;
+import com.julauncher.data.json.Mod;
+import com.julauncher.data.json.ModType;
+import com.julauncher.data.json.Version;
+import com.julauncher.data.mojang.AssetIndex;
+import com.julauncher.data.mojang.AssetObject;
+import com.julauncher.data.mojang.DateTypeAdapter;
+import com.julauncher.data.mojang.EnumTypeAdapterFactory;
+import com.julauncher.data.mojang.FileTypeAdapter;
+import com.julauncher.data.mojang.Library;
+import com.julauncher.data.mojang.MojangConstants;
+import com.julauncher.gui.dialogs.ModsChooser;
+import com.julauncher.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
@@ -770,7 +770,7 @@ public class InstanceInstaller extends SwingWorker<Boolean, Void> {
         List<String> libraryNamesAdded = new ArrayList<String>();
 
         // Now read in the library jars needed from the pack
-        for (com..julauncher.data.json.Library library : this.jsonVersion.getLibraries()) {
+        for (com.julauncher.data.json.Library library : this.jsonVersion.getLibraries()) {
             if (library.hasDepends()) {
                 boolean found = false;
                 for (Mod mod : selectedMods) {
@@ -951,7 +951,7 @@ public class InstanceInstaller extends SwingWorker<Boolean, Void> {
             }
             if (mod.getType() == ModType.jar) {
                 return true;
-            } else if (mod.getType() == ModType.decomp && mod.getDecompType() == com..julauncher.data.json.DecompType
+            } else if (mod.getType() == ModType.decomp && mod.getDecompType() == com.julauncher.data.json.DecompType
                     .jar) {
                 return true;
             }

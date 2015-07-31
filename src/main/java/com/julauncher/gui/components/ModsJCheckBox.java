@@ -15,15 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.components;
+package com.julauncher.gui.components;
 
-import com..julauncher.App;
-import com..julauncher.data.DisableableMod;
-import com..julauncher.data.json.Mod;
-import com..julauncher.gui.CustomLineBorder;
-import com..julauncher.gui.dialogs.EditModsDialog;
-import com..julauncher.gui.dialogs.ModsChooser;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.data.DisableableMod;
+import com.julauncher.data.json.Mod;
+import com.julauncher.gui.CustomLineBorder;
+import com.julauncher.gui.dialogs.EditModsDialog;
+import com.julauncher.gui.dialogs.ModsChooser;
+import com.julauncher.utils.Utils;
 
 import javax.swing.JCheckBox;
 import javax.swing.JToolTip;
@@ -41,7 +41,7 @@ public class ModsJCheckBox extends JCheckBox {
     private static final long serialVersionUID = -4560260483416099547L;
 
     /**
-     * The mod this object will use to display it's data. Will be type {@link Mod}, {@link com..julauncher.data.json.Mod}
+     * The mod this object will use to display it's data. Will be type {@link Mod}, {@link com.julauncher.data.json.Mod}
      * or {@link DisableableMod}.
      */
     private Object mod;

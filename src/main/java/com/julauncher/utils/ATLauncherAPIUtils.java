@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.utils;
+package com.julauncher.utils;
 
-import com..julauncher.App;
-import com..julauncher.data.Constants;
-import com..julauncher.data.mojang.OperatingSystem;
+import com.julauncher.App;
+import com.julauncher.data.Constants;
+import com.julauncher.data.mojang.OperatingSystem;
 
 import java.io.IOException;
 import java.util.HashMap;

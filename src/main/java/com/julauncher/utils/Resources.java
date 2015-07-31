@@ -16,11 +16,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.utils;
+package com.julauncher.utils;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
-import com..julauncher.exceptions.ChunkyException;
+import com.julauncher.App;
+import com.julauncher.LogManager;
+import com.julauncher.exceptions.ChunkyException;
 
 import javax.swing.text.html.StyleSheet;
 import java.awt.Font;

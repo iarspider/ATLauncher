@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.exceptions;
+package com.julauncher.exceptions;
 
 public final class ChunkyException extends RuntimeException {
     public ChunkyException(String ex) {

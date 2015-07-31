@@ -15,19 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.tabs;
+package com.julauncher.gui.tabs;
 
-import com..julauncher.App;
-import com..julauncher.data.Language;
-import com..julauncher.data.Pack;
-import com..julauncher.evnt.listener.RelocalizationListener;
-import com..julauncher.evnt.listener.TabChangeListener;
-import com..julauncher.evnt.manager.RelocalizationManager;
-import com..julauncher.evnt.manager.TabChangeManager;
-import com..julauncher.gui.LauncherFrame;
-import com..julauncher.gui.card.NilCard;
-import com..julauncher.gui.card.PackCard;
-import com..julauncher.gui.dialogs.AddPackDialog;
+import com.julauncher.App;
+import com.julauncher.data.Language;
+import com.julauncher.data.Pack;
+import com.julauncher.evnt.listener.RelocalizationListener;
+import com.julauncher.evnt.listener.TabChangeListener;
+import com.julauncher.evnt.manager.RelocalizationManager;
+import com.julauncher.evnt.manager.TabChangeManager;
+import com.julauncher.gui.LauncherFrame;
+import com.julauncher.gui.card.NilCard;
+import com.julauncher.gui.card.PackCard;
+import com.julauncher.gui.dialogs.AddPackDialog;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;

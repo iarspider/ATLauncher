@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.tabs;
+package com.julauncher.gui.tabs;
 
-import com..julauncher.App;
-import com..julauncher.data.Instance;
-import com..julauncher.data.Language;
-import com..julauncher.gui.card.InstanceCard;
-import com..julauncher.gui.card.NilCard;
+import com.julauncher.App;
+import com.julauncher.data.Instance;
+import com.julauncher.data.Language;
+import com.julauncher.gui.card.InstanceCard;
+import com.julauncher.gui.card.NilCard;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;

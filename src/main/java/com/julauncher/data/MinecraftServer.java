@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.App;
-import com..julauncher.utils.MCQuery;
+import com.julauncher.App;
+import com.julauncher.utils.MCQuery;
 import com.google.gson.reflect.TypeToken;
 import de.zh32.pingtest.QueryVersion;
 

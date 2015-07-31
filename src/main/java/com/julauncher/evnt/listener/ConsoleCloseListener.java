@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.evnt.listener;
+package com.julauncher.evnt.listener;
 
 public interface ConsoleCloseListener {
     public void onConsoleClose();

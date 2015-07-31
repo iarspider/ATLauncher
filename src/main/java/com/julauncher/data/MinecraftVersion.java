@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.annot.Json;
-import com..julauncher.data.mojang.MojangConstants;
-import com..julauncher.data.mojang.MojangVersion;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.annot.Json;
+import com.julauncher.data.mojang.MojangConstants;
+import com.julauncher.data.mojang.MojangVersion;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 
@@ -30,7 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 
 /**
- * TODO: Rewrite along with {@link com..julauncher.data.Version} {@link com..julauncher.data.LauncherVersion}
+ * TODO: Rewrite along with {@link com.julauncher.data.Version} {@link com.julauncher.data.LauncherVersion}
  */
 @Json
 public class MinecraftVersion {

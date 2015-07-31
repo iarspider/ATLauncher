@@ -15,16 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.utils;
+package com.julauncher.utils;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.LogManager;
-import com..julauncher.data.Constants;
-import com..julauncher.data.mojang.ExtractRule;
-import com..julauncher.data.mojang.OperatingSystem;
-import com..julauncher.data.openmods.OpenEyeReportResponse;
-import com..julauncher.evnt.LogEvent.LogType;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.LogManager;
+import com.julauncher.data.Constants;
+import com.julauncher.data.mojang.ExtractRule;
+import com.julauncher.data.mojang.OperatingSystem;
+import com.julauncher.data.openmods.OpenEyeReportResponse;
+import com.julauncher.evnt.LogEvent.LogType;
 import org.tukaani.xz.XZInputStream;
 
 import javax.crypto.BadPaddingException;

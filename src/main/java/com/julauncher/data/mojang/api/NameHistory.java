@@ -1,4 +1,4 @@
-package com..julauncher.data.mojang.api;
+package com.julauncher.data.mojang.api;
 
 public class NameHistory {
     private String name;

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data;
+package com.julauncher.data;
 
 public class Constants {
     public static final LauncherVersion VERSION = new LauncherVersion(3, 2, 3, 2, 0);

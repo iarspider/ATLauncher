@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher;
+package com.julauncher;
 
 public final class ExceptionStrainer implements Thread.UncaughtExceptionHandler {
     @Override

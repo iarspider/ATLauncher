@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.components;
+package com.julauncher.gui.components;
 
-import com..julauncher.App;
-import com..julauncher.data.Language;
-import com..julauncher.utils.HTMLUtils;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.data.Language;
+import com.julauncher.utils.HTMLUtils;
+import com.julauncher.utils.Utils;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;

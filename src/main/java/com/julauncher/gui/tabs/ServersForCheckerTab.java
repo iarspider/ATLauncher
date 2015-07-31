@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.tabs;
+package com.julauncher.gui.tabs;
 
-import com..julauncher.App;
-import com..julauncher.data.Language;
-import com..julauncher.data.MinecraftServer;
-import com..julauncher.gui.dialogs.AddEditServerForCheckerDialog;
+import com.julauncher.App;
+import com.julauncher.data.Language;
+import com.julauncher.data.MinecraftServer;
+import com.julauncher.gui.dialogs.AddEditServerForCheckerDialog;
 
 import javax.swing.DefaultListModel;
 import javax.swing.DefaultListSelectionModel;

@@ -16,10 +16,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
+import com.julauncher.App;
+import com.julauncher.LogManager;
 
 import java.io.File;
 import java.io.FileInputStream;

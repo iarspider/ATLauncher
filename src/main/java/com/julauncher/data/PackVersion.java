@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.App;
-import com..julauncher.exceptions.InvalidMinecraftVersion;
+import com.julauncher.App;
+import com.julauncher.exceptions.InvalidMinecraftVersion;
 
 public class PackVersion {
     private String version;

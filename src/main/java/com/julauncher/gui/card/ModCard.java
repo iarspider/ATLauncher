@@ -16,10 +16,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.gui.card;
+package com.julauncher.gui.card;
 
-import com..julauncher.data.Mod;
-import com..julauncher.utils.Utils;
+import com.julauncher.data.Mod;
+import com.julauncher.utils.Utils;
 
 import javax.swing.JPanel;
 import java.awt.Color;

@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data.json;
+package com.julauncher.data.json;
 
-import com..julauncher.App;
-import com..julauncher.annot.Json;
-import com..julauncher.data.Downloadable;
+import com.julauncher.App;
+import com.julauncher.annot.Json;
+import com.julauncher.data.Downloadable;
 
 import java.io.File;
 

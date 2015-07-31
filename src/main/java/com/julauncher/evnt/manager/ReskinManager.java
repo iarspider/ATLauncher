@@ -16,9 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.evnt.manager;
+package com.julauncher.evnt.manager;
 
-import com..julauncher.evnt.listener.ReskinListener;
+import com.julauncher.evnt.listener.ReskinListener;
 
 import javax.swing.SwingUtilities;
 import java.util.LinkedList;

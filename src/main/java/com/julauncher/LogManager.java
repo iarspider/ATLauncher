@@ -16,12 +16,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher;
+package com.julauncher;
 
-import com..julauncher.evnt.LogEvent;
-import com..julauncher.evnt.LogEvent.LogType;
-import com..julauncher.thread.LoggingThread;
-import com..julauncher.utils.Utils;
+import com.julauncher.evnt.LogEvent;
+import com.julauncher.evnt.LogEvent.LogType;
+import com.julauncher.thread.LoggingThread;
+import com.julauncher.utils.Utils;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;

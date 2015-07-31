@@ -15,16 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data.json;
+package com.julauncher.data.json;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
-import com..julauncher.annot.Json;
-import com..julauncher.data.Downloadable;
-import com..julauncher.data.Language;
-import com..julauncher.utils.HTMLUtils;
-import com..julauncher.utils.Utils;
-import com..julauncher.workers.InstanceInstaller;
+import com.julauncher.App;
+import com.julauncher.LogManager;
+import com.julauncher.annot.Json;
+import com.julauncher.data.Downloadable;
+import com.julauncher.data.Language;
+import com.julauncher.utils.HTMLUtils;
+import com.julauncher.utils.Utils;
+import com.julauncher.workers.InstanceInstaller;
 
 import javax.swing.JOptionPane;
 import java.awt.Color;

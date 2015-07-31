@@ -16,9 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.gui.components.CollapsiblePanel;
+import com.julauncher.gui.components.CollapsiblePanel;
 
 import java.io.File;
 import java.util.HashMap;
@@ -75,9 +75,9 @@ public abstract class SyncAbstract {
     public abstract void deleteBackup(String backupName, Instance instance);
 
     /**
-     * If the sync addon has settings then you should return an instance of {@link com..julauncher.gui.components
+     * If the sync addon has settings then you should return an instance of {@link com.julauncher.gui.components
      * .CollapsiblePanel CollapsiblePanel}. It is recommended you extend that class. Look at {@link
-     * com..julauncher.data.DropboxSync DropboxSync} for example.
+     * com.julauncher.data.DropboxSync DropboxSync} for example.
      *
      * @return The settings panel
      */

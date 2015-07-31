@@ -15,17 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.LogManager;
-import com..julauncher.data.openmods.OpenEyeReportResponse;
-import com..julauncher.gui.dialogs.ProgressDialog;
-import com..julauncher.mclauncher.LegacyMCLauncher;
-import com..julauncher.mclauncher.MCLauncher;
-import com..julauncher.utils.HTMLUtils;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.LogManager;
+import com.julauncher.data.openmods.OpenEyeReportResponse;
+import com.julauncher.gui.dialogs.ProgressDialog;
+import com.julauncher.mclauncher.LegacyMCLauncher;
+import com.julauncher.mclauncher.MCLauncher;
+import com.julauncher.utils.HTMLUtils;
+import com.julauncher.utils.Utils;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -135,7 +135,7 @@ public class Instance implements Cloneable {
      * The Pack object for the pack this Instance was installed from. This is not stored in the instances instance.json
      * file as Pack's can be deleted from the system.
      *
-     * @see com..julauncher.data.Pack
+     * @see com.julauncher.data.Pack
      */
     private transient Pack realPack;
 
@@ -153,15 +153,15 @@ public class Instance implements Cloneable {
     /**
      * If this instance uses the MCLauncher or the LegacyMCLauncher class to load Minecraft.
      *
-     * @see com..julauncher.mclauncher.MCLauncher
-     * @see com..julauncher.mclauncher.LegacyMCLauncher
+     * @see com.julauncher.mclauncher.MCLauncher
+     * @see com.julauncher.mclauncher.LegacyMCLauncher
      */
     private boolean newLaunchMethod;
 
     /**
      * List of DisableableMod objects for the mods in the Instance.
      *
-     * @see com..julauncher.data.DisableableMod
+     * @see com.julauncher.data.DisableableMod
      */
     private List<DisableableMod> mods;
 
@@ -711,7 +711,7 @@ public class Instance implements Cloneable {
      * Checks if the pack associated with this Instance can be installed.
      *
      * @return true if the Pack this Instance was made from can be installed
-     * @see com..julauncher.data.Pack#canInstall
+     * @see com.julauncher.data.Pack#canInstall
      */
     public boolean canInstall() {
         return (this.realPack != null && this.realPack.canInstall());
@@ -939,7 +939,7 @@ public class Instance implements Cloneable {
 
     /**
      * Checks if this Instance can be played. This refers only to the account and permission side of things and doesn't
-     * reference if the instance is playable or as determined by the {@link com..julauncher.data.Instance#isPlayable}
+     * reference if the instance is playable or as determined by the {@link com.julauncher.data.Instance#isPlayable}
      * field.
      *
      * @return true if the user can play this Instance
@@ -1048,7 +1048,7 @@ public class Instance implements Cloneable {
     /**
      * Sets the mods installed for this Instance.
      *
-     * @param mods List of {@link com..julauncher.data.DisableableMod} objects of the mods installed with this Instance.
+     * @param mods List of {@link com.julauncher.data.DisableableMod} objects of the mods installed with this Instance.
      */
     public void setModsInstalled(List<DisableableMod> mods) {
         this.mods = mods;

@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.utils;
+package com.julauncher.utils;
 
-import com..julauncher.Gsons;
-import com..julauncher.data.Downloadable;
-import com..julauncher.data.mojang.api.NameHistory;
-import com..julauncher.data.mojang.api.ProfileResponse;
+import com.julauncher.Gsons;
+import com.julauncher.data.Downloadable;
+import com.julauncher.data.mojang.api.NameHistory;
+import com.julauncher.data.mojang.api.ProfileResponse;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.List;

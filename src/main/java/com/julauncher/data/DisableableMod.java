@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.LogManager;
+import com.julauncher.utils.Utils;
 
 import java.awt.Color;
 import java.io.File;

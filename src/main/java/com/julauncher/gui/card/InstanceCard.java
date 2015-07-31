@@ -16,25 +16,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.gui.card;
+package com.julauncher.gui.card;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.LogManager;
-import com..julauncher.data.APIResponse;
-import com..julauncher.data.Instance;
-import com..julauncher.data.Language;
-import com..julauncher.evnt.listener.RelocalizationListener;
-import com..julauncher.evnt.manager.RelocalizationManager;
-import com..julauncher.gui.components.CollapsiblePanel;
-import com..julauncher.gui.components.ImagePanel;
-import com..julauncher.gui.dialogs.BackupDialog;
-import com..julauncher.gui.dialogs.EditModsDialog;
-import com..julauncher.gui.dialogs.InstanceInstallerDialog;
-import com..julauncher.gui.dialogs.ProgressDialog;
-import com..julauncher.gui.dialogs.RenameInstanceDialog;
-import com..julauncher.utils.HTMLUtils;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.LogManager;
+import com.julauncher.data.APIResponse;
+import com.julauncher.data.Instance;
+import com.julauncher.data.Language;
+import com.julauncher.evnt.listener.RelocalizationListener;
+import com.julauncher.evnt.manager.RelocalizationManager;
+import com.julauncher.gui.components.CollapsiblePanel;
+import com.julauncher.gui.components.ImagePanel;
+import com.julauncher.gui.dialogs.BackupDialog;
+import com.julauncher.gui.dialogs.EditModsDialog;
+import com.julauncher.gui.dialogs.InstanceInstallerDialog;
+import com.julauncher.gui.dialogs.ProgressDialog;
+import com.julauncher.gui.dialogs.RenameInstanceDialog;
+import com.julauncher.utils.HTMLUtils;
+import com.julauncher.utils.Utils;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;

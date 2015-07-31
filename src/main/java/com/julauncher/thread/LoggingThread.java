@@ -16,13 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.thread;
+package com.julauncher.thread;
 
-import com..julauncher.App;
-import com..julauncher.data.Constants;
-import com..julauncher.evnt.LogEvent;
-import com..julauncher.utils.Timestamper;
-import com..julauncher.writer.LogEventWriter;
+import com.julauncher.App;
+import com.julauncher.data.Constants;
+import com.julauncher.evnt.LogEvent;
+import com.julauncher.utils.Timestamper;
+import com.julauncher.writer.LogEventWriter;
 
 import java.io.File;
 import java.io.FileWriter;

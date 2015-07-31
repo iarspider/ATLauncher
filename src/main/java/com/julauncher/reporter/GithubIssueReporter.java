@@ -16,14 +16,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.reporter;
+package com.julauncher.reporter;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.LogManager;
-import com..julauncher.data.APIResponse;
-import com..julauncher.thread.PasteUpload;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.LogManager;
+import com.julauncher.data.APIResponse;
+import com.julauncher.thread.PasteUpload;
+import com.julauncher.utils.Utils;
 
 import java.io.IOException;
 import java.util.HashMap;

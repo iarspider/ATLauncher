@@ -16,10 +16,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.writer;
+package com.julauncher.writer;
 
-import com..julauncher.evnt.LogEvent;
-import com..julauncher.exceptions.ChunkyException;
+import com.julauncher.evnt.LogEvent;
+import com.julauncher.exceptions.ChunkyException;
 
 import java.io.Closeable;
 import java.io.Flushable;

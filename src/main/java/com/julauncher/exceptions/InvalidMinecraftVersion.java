@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.exceptions;
+package com.julauncher.exceptions;
 
 /**
  * InvalidMinecraftVersion is thrown when a given Minecraft version number isn't supported by the Launcher

@@ -16,9 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.reporter;
+package com.julauncher.reporter;
 
-import com..julauncher.Gsons;
+import com.julauncher.Gsons;
 
 @SuppressWarnings("unused")
 public final class GithubIssue {

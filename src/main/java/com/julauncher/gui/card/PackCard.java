@@ -15,18 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.card;
+package com.julauncher.gui.card;
 
-import com..julauncher.App;
-import com..julauncher.data.Language;
-import com..julauncher.data.Pack;
-import com..julauncher.evnt.listener.RelocalizationListener;
-import com..julauncher.evnt.manager.RelocalizationManager;
-import com..julauncher.gui.components.CollapsiblePanel;
-import com..julauncher.gui.components.PackImagePanel;
-import com..julauncher.gui.dialogs.InstanceInstallerDialog;
-import com..julauncher.gui.dialogs.ViewModsDialog;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.data.Language;
+import com.julauncher.data.Pack;
+import com.julauncher.evnt.listener.RelocalizationListener;
+import com.julauncher.evnt.manager.RelocalizationManager;
+import com.julauncher.gui.components.CollapsiblePanel;
+import com.julauncher.gui.components.PackImagePanel;
+import com.julauncher.gui.dialogs.InstanceInstallerDialog;
+import com.julauncher.gui.dialogs.ViewModsDialog;
+import com.julauncher.utils.Utils;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;

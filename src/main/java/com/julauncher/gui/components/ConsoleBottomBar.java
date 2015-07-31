@@ -15,16 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.components;
+package com.julauncher.gui.components;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
-import com..julauncher.data.Constants;
-import com..julauncher.data.Language;
-import com..julauncher.evnt.listener.RelocalizationListener;
-import com..julauncher.evnt.manager.RelocalizationManager;
-import com..julauncher.thread.PasteUpload;
-import com..julauncher.utils.HTMLUtils;
+import com.julauncher.App;
+import com.julauncher.LogManager;
+import com.julauncher.data.Constants;
+import com.julauncher.data.Language;
+import com.julauncher.evnt.listener.RelocalizationListener;
+import com.julauncher.evnt.manager.RelocalizationManager;
+import com.julauncher.thread.PasteUpload;
+import com.julauncher.utils.HTMLUtils;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;

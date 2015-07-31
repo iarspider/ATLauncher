@@ -15,26 +15,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui;
+package com.julauncher.gui;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
-import com..julauncher.data.Constants;
-import com..julauncher.data.Pack;
-import com..julauncher.data.PackVersion;
-import com..julauncher.evnt.listener.RelocalizationListener;
-import com..julauncher.evnt.manager.RelocalizationManager;
-import com..julauncher.evnt.manager.TabChangeManager;
-import com..julauncher.gui.components.LauncherBottomBar;
-import com..julauncher.gui.dialogs.InstanceInstallerDialog;
-import com..julauncher.gui.tabs.AccountsTab;
-import com..julauncher.gui.tabs.InstancesTab;
-import com..julauncher.gui.tabs.NewsTab;
-import com..julauncher.gui.tabs.PacksTab;
-import com..julauncher.gui.tabs.SettingsTab;
-import com..julauncher.gui.tabs.Tab;
-import com..julauncher.gui.tabs.ToolsTab;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.LogManager;
+import com.julauncher.data.Constants;
+import com.julauncher.data.Pack;
+import com.julauncher.data.PackVersion;
+import com.julauncher.evnt.listener.RelocalizationListener;
+import com.julauncher.evnt.manager.RelocalizationManager;
+import com.julauncher.evnt.manager.TabChangeManager;
+import com.julauncher.gui.components.LauncherBottomBar;
+import com.julauncher.gui.dialogs.InstanceInstallerDialog;
+import com.julauncher.gui.tabs.AccountsTab;
+import com.julauncher.gui.tabs.InstancesTab;
+import com.julauncher.gui.tabs.NewsTab;
+import com.julauncher.gui.tabs.PacksTab;
+import com.julauncher.gui.tabs.SettingsTab;
+import com.julauncher.gui.tabs.Tab;
+import com.julauncher.gui.tabs.ToolsTab;
+import com.julauncher.utils.Utils;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;

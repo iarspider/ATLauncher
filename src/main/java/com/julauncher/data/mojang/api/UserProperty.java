@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data.mojang.api;
+package com.julauncher.data.mojang.api;
 
-import com..julauncher.LogManager;
-import com..julauncher.annot.Json;
+import com.julauncher.LogManager;
+import com.julauncher.annot.Json;
 
 import java.util.Map;
 

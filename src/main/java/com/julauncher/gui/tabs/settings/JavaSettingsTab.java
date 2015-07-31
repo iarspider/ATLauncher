@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.tabs.settings;
+package com.julauncher.gui.tabs.settings;
 
-import com..julauncher.App;
-import com..julauncher.data.Language;
-import com..julauncher.evnt.listener.RelocalizationListener;
-import com..julauncher.evnt.manager.RelocalizationManager;
-import com..julauncher.gui.components.JLabelWithHover;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.data.Language;
+import com.julauncher.evnt.listener.RelocalizationListener;
+import com.julauncher.evnt.manager.RelocalizationManager;
+import com.julauncher.gui.components.JLabelWithHover;
+import com.julauncher.utils.Utils;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;

@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.dialogs;
+package com.julauncher.gui.dialogs;
 
-import com..julauncher.App;
-import com..julauncher.data.Language;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.data.Language;
+import com.julauncher.utils.Utils;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;

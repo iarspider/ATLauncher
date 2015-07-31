@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.mclauncher;
+package com.julauncher.mclauncher;
 
-import com..julauncher.utils.Utils;
+import com.julauncher.utils.Utils;
 import net.minecraft.Launcher;
 
 import java.applet.Applet;

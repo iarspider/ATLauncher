@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.gui.components;
+package com.julauncher.gui.components;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;

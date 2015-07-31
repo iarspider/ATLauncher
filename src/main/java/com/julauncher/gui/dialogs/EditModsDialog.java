@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.dialogs;
+package com.julauncher.gui.dialogs;
 
-import com..julauncher.App;
-import com..julauncher.data.DisableableMod;
-import com..julauncher.data.Instance;
-import com..julauncher.data.Language;
-import com..julauncher.gui.components.ModsJCheckBox;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.data.DisableableMod;
+import com.julauncher.data.Instance;
+import com.julauncher.data.Language;
+import com.julauncher.gui.components.ModsJCheckBox;
+import com.julauncher.utils.Utils;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -138,19 +138,19 @@ public class EditModsDialog extends JDialog {
                     boolean reload = false;
                     for (File file : files) {
                         String typeTemp = fcd.getSelectorValue();
-                        com..julauncher.data.Type type = null;
+                        com.julauncher.data.Type type = null;
                         if (typeTemp.equalsIgnoreCase("Mods Folder")) {
-                            type = com..julauncher.data.Type.mods;
+                            type = com.julauncher.data.Type.mods;
                         } else if (typeTemp.equalsIgnoreCase("Inside Minecraft.jar")) {
-                            type = com..julauncher.data.Type.jar;
+                            type = com.julauncher.data.Type.jar;
                         } else if (typeTemp.equalsIgnoreCase("CoreMods Mod")) {
-                            type = com..julauncher.data.Type.coremods;
+                            type = com.julauncher.data.Type.coremods;
                         } else if (typeTemp.equalsIgnoreCase("Texture Pack")) {
-                            type = com..julauncher.data.Type.texturepack;
+                            type = com.julauncher.data.Type.texturepack;
                         } else if (typeTemp.equalsIgnoreCase("Resource Pack")) {
-                            type = com..julauncher.data.Type.resourcepack;
+                            type = com.julauncher.data.Type.resourcepack;
                         } else if (typeTemp.equalsIgnoreCase("Shader Pack")) {
-                            type = com..julauncher.data.Type.shaderpack;
+                            type = com.julauncher.data.Type.shaderpack;
                         }
                         if (type != null) {
                             DisableableMod mod = new DisableableMod(file.getName(), "Custom", true, file.getName(),

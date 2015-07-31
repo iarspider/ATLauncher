@@ -16,9 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.evnt.manager;
+package com.julauncher.evnt.manager;
 
-import com..julauncher.evnt.listener.ConsoleOpenListener;
+import com.julauncher.evnt.listener.ConsoleOpenListener;
 
 import javax.swing.SwingUtilities;
 import java.util.LinkedList;

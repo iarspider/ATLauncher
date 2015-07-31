@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.tabs;
+package com.julauncher.gui.tabs;
 
-import com..julauncher.data.Language;
-import com..julauncher.gui.components.BlankToolPanel;
-import com..julauncher.gui.components.LogClearerToolPanel;
-import com..julauncher.gui.components.NetworkCheckerToolPanel;
-import com..julauncher.gui.components.ServerCheckerToolPanel;
+import com.julauncher.data.Language;
+import com.julauncher.gui.components.BlankToolPanel;
+import com.julauncher.gui.components.LogClearerToolPanel;
+import com.julauncher.gui.components.NetworkCheckerToolPanel;
+import com.julauncher.gui.components.ServerCheckerToolPanel;
 
 import javax.swing.JPanel;
 import java.awt.BorderLayout;

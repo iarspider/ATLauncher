@@ -15,19 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher;
+package com.julauncher;
 
-import com..julauncher.data.Constants;
-import com..julauncher.data.Instance;
-import com..julauncher.data.Pack;
-import com..julauncher.data.Settings;
-import com..julauncher.gui.LauncherFrame;
-import com..julauncher.gui.SplashScreen;
-import com..julauncher.gui.TrayMenu;
-import com..julauncher.gui.dialogs.SetupDialog;
-import com..julauncher.gui.theme.Theme;
-import com..julauncher.utils.HTMLUtils;
-import com..julauncher.utils.Utils;
+import com.julauncher.data.Constants;
+import com.julauncher.data.Instance;
+import com.julauncher.data.Pack;
+import com.julauncher.data.Settings;
+import com.julauncher.gui.LauncherFrame;
+import com.julauncher.gui.SplashScreen;
+import com.julauncher.gui.TrayMenu;
+import com.julauncher.gui.dialogs.SetupDialog;
+import com.julauncher.gui.theme.Theme;
+import com.julauncher.utils.HTMLUtils;
+import com.julauncher.utils.Utils;
 import io.github.asyncronous.toast.Toaster;
 
 import javax.swing.InputMap;

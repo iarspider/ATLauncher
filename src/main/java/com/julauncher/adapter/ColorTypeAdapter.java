@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher.adapter;
+package com.julauncher.adapter;
 
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapter;

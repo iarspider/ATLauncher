@@ -16,12 +16,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com..julauncher;
+package com.julauncher;
 
-import com..julauncher.adapter.ColorTypeAdapter;
-import com..julauncher.data.mojang.DateTypeAdapter;
-import com..julauncher.data.mojang.EnumTypeAdapterFactory;
-import com..julauncher.data.mojang.FileTypeAdapter;
+import com.julauncher.adapter.ColorTypeAdapter;
+import com.julauncher.data.mojang.DateTypeAdapter;
+import com.julauncher.data.mojang.EnumTypeAdapterFactory;
+import com.julauncher.data.mojang.FileTypeAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 

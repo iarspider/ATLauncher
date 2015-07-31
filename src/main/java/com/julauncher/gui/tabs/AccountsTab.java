@@ -15,16 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.gui.tabs;
+package com.julauncher.gui.tabs;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
-import com..julauncher.data.Account;
-import com..julauncher.data.Language;
-import com..julauncher.data.LoginResponse;
-import com..julauncher.gui.dialogs.ProgressDialog;
-import com..julauncher.utils.Authentication;
-import com..julauncher.utils.HTMLUtils;
+import com.julauncher.App;
+import com.julauncher.LogManager;
+import com.julauncher.data.Account;
+import com.julauncher.data.Language;
+import com.julauncher.data.LoginResponse;
+import com.julauncher.gui.dialogs.ProgressDialog;
+import com.julauncher.utils.Authentication;
+import com.julauncher.utils.HTMLUtils;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;

@@ -15,15 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.mclauncher;
+package com.julauncher.mclauncher;
 
-import com..julauncher.App;
-import com..julauncher.LogManager;
-import com..julauncher.data.Account;
-import com..julauncher.data.Instance;
-import com..julauncher.data.LoginResponse;
-import com..julauncher.data.mojang.PropertyMapSerializer;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.LogManager;
+import com.julauncher.data.Account;
+import com.julauncher.data.Instance;
+import com.julauncher.data.LoginResponse;
+import com.julauncher.data.mojang.PropertyMapSerializer;
+import com.julauncher.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.authlib.properties.PropertyMap;

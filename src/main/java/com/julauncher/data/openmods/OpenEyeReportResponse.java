@@ -15,10 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data.openmods;
+package com.julauncher.data.openmods;
 
-import com..julauncher.data.Language;
-import com..julauncher.utils.Utils;
+import com.julauncher.data.Language;
+import com.julauncher.utils.Utils;
 
 /**
  * The Class OpenEyeReportResponse contains information returned from OpenMods OpenEye system when a pending crash

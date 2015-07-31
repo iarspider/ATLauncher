@@ -15,20 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com..julauncher.data;
+package com.julauncher.data;
 
-import com..julauncher.App;
-import com..julauncher.Gsons;
-import com..julauncher.LogManager;
-import com..julauncher.data.mojang.api.MinecraftProfileResponse;
-import com..julauncher.data.mojang.api.ProfileTexture;
-import com..julauncher.gui.dialogs.ProgressDialog;
-import com..julauncher.gui.tabs.InstancesTab;
-import com..julauncher.gui.tabs.PacksTab;
-import com..julauncher.utils.Authentication;
-import com..julauncher.utils.HTMLUtils;
-import com..julauncher.utils.MojangAPIUtils;
-import com..julauncher.utils.Utils;
+import com.julauncher.App;
+import com.julauncher.Gsons;
+import com.julauncher.LogManager;
+import com.julauncher.data.mojang.api.MinecraftProfileResponse;
+import com.julauncher.data.mojang.api.ProfileTexture;
+import com.julauncher.gui.dialogs.ProgressDialog;
+import com.julauncher.gui.tabs.InstancesTab;
+import com.julauncher.gui.tabs.PacksTab;
+import com.julauncher.utils.Authentication;
+import com.julauncher.utils.HTMLUtils;
+import com.julauncher.utils.MojangAPIUtils;
+import com.julauncher.utils.Utils;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.mojang.util.UUIDTypeAdapter;
 
