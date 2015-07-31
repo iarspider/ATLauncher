@@ -83,7 +83,7 @@ public class InstancesTab extends JPanel implements Tab {
             searchBox.setText(this.searchText);
         }
         searchBox.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
+            public void keyReleased(KeyEvent e) {
                 if (e.getKeyChar() == KeyEvent.VK_ENTER) {
                     reload();
                 }
@@ -114,8 +114,8 @@ public class InstancesTab extends JPanel implements Tab {
         add(topPanel, BorderLayout.NORTH);
 
         panel = new JPanel();
-        scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane
+                .HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 

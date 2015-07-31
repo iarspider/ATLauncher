@@ -18,12 +18,10 @@
 package com.atlauncher.data;
 
 import com.atlauncher.App;
+import com.atlauncher.Gsons;
 import com.atlauncher.LogManager;
 import com.atlauncher.Update;
-import com.atlauncher.adapter.ColorTypeAdapter;
-import com.atlauncher.data.mojang.DateTypeAdapter;
-import com.atlauncher.data.mojang.EnumTypeAdapterFactory;
-import com.atlauncher.data.mojang.FileTypeAdapter;
+import com.atlauncher.data.json.LauncherLibrary;
 import com.atlauncher.exceptions.InvalidMinecraftVersion;
 import com.atlauncher.exceptions.InvalidPack;
 import com.atlauncher.gui.LauncherConsole;
@@ -32,11 +30,12 @@ import com.atlauncher.gui.dialogs.ProgressDialog;
 import com.atlauncher.gui.tabs.InstancesTab;
 import com.atlauncher.gui.tabs.NewsTab;
 import com.atlauncher.gui.tabs.PacksTab;
-import com.atlauncher.utils.Authentication;
+import com.atlauncher.thread.LoggingThread;
+import com.atlauncher.utils.ATLauncherAPIUtils;
+import com.atlauncher.utils.HTMLUtils;
+import com.atlauncher.utils.MojangAPIUtils;
 import com.atlauncher.utils.Timestamper;
 import com.atlauncher.utils.Utils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
@@ -49,11 +48,11 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import java.awt.Color;
 import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
 import java.awt.Window;
 import java.awt.event.WindowAdapter;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.EOFException;
 import java.io.File;
@@ -64,6 +63,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
@@ -71,9 +71,10 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -90,17 +91,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Settings class for storing all data for the Launcher and the settings of the user
+ * Settings class for storing all data for the Launcher and the settings of the user.
  *
  * @author Ryan
  */
 public class Settings {
-    public static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    public static Gson altGson = new GsonBuilder().setPrettyPrinting().registerTypeAdapterFactory(new
-            EnumTypeAdapterFactory()).registerTypeAdapter(Date.class, new DateTypeAdapter()).registerTypeAdapter(File
-            .class, new FileTypeAdapter()).create();
-    public static Gson themeGson = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(Color.class, new
-            ColorTypeAdapter()).create();
     // Users Settings
     private Server server; // Server to use for the Launcher
     private String forgeLoggingLevel; // Logging level to use when running Minecraft with Forge
@@ -128,6 +123,7 @@ public class Settings {
     private int proxyPort; // The proxies port
     private String proxyType; // The type of proxy (socks, http)
     private int concurrentConnections; // Number of concurrent connections to open when downloading
+    private int daysOfLogsToKeep; // Number of days of logs to keep
     private Account account; // Account using the Launcher
     private String addedPacks; // The Semi Public packs the user has added to the Launcher
     private Proxy proxy = null; // The proxy object if any
@@ -152,11 +148,12 @@ public class Settings {
     private List<Instance> instances = new ArrayList<Instance>(); // Users Installed Instances
     private List<Account> accounts = new ArrayList<Account>(); // Accounts in the Launcher
     private List<MinecraftServer> checkingServers = new ArrayList<MinecraftServer>();
+    private List<LauncherLibrary> launcherLibraries = new ArrayList<LauncherLibrary>();
     // Directories and Files for the Launcher
     private File baseDir, backupsDir, configsDir, themesDir, jsonDir, versionsDir, imagesDir, skinsDir, jarsDir,
-            commonConfigsDir, resourcesDir, librariesDir, languagesDir, downloadsDir, usersDownloadsFolder,
-            instancesDir, serversDir, tempDir, failedDownloadsDir, instancesDataFile, checkingServersFile,
-            userDataFile, propertiesFile;
+            commonConfigsDir, resourcesDir, librariesDir, launcherLibrariesdir, languagesDir, downloadsDir,
+            usersDownloadsFolder, instancesDir, serversDir, tempDir, failedDownloadsDir, instancesDataFile,
+            checkingServersFile, userDataFile, propertiesFile, logsDir;
     // Launcher Settings
     private JFrame parent; // Parent JFrame of the actual Launcher
     private Properties properties = new Properties(); // Properties to store everything in
@@ -186,7 +183,6 @@ public class Settings {
         setupFiles(); // Setup all the file and directory variables
         checkFolders(); // Checks the setup of the folders and makes sure they're there
         clearTempDir(); // Cleans all files in the Temp Dir
-        rotateLogFiles(); // Rotates the log files
         loadStartingProperties(); // Get users Console preference and Java Path
     }
 
@@ -198,6 +194,7 @@ public class Settings {
     public void setupFiles() {
         baseDir = Utils.getCoreGracefully();
         usersDownloadsFolder = new File(System.getProperty("user.home"), "Downloads");
+        logsDir = new File(baseDir, "Logs");
         backupsDir = new File(baseDir, "Backups");
         configsDir = new File(baseDir, "Configs");
         themesDir = new File(configsDir, "Themes");
@@ -209,6 +206,7 @@ public class Settings {
         commonConfigsDir = new File(configsDir, "Common");
         resourcesDir = new File(configsDir, "Resources");
         librariesDir = new File(configsDir, "Libraries");
+        launcherLibrariesdir = new File(librariesDir, "Launcher");
         languagesDir = new File(configsDir, "Languages");
         downloadsDir = new File(baseDir, "Downloads");
         instancesDir = new File(baseDir, "Instances");
@@ -218,18 +216,27 @@ public class Settings {
         instancesDataFile = new File(configsDir, "instancesdata");
         checkingServersFile = new File(configsDir, "checkingservers.json");
         userDataFile = new File(configsDir, "userdata");
-        propertiesFile = new File(configsDir, "ATLauncher.conf");
+        propertiesFile = new File(configsDir, Constants.LAUNCHER_NAME + ".conf");
     }
 
     public void loadEverything() {
+        if (App.forceOfflineMode) {
+            this.offlineMode = true;
+        }
+
         setupServers(); // Setup the servers available to use in the Launcher
-        findActiveServers(); // Find active servers
         loadServerProperty(false); // Get users Server preference
         if (hasUpdatedFiles()) {
             downloadUpdatedFiles(); // Downloads updated files on the server
         }
 
         checkForLauncherUpdate();
+
+        downloadExternalLibraries();
+
+        if (!Utils.checkAuthLibLoaded()) {
+            LogManager.error("AuthLib was not loaded into the classpath!");
+        }
 
         loadNews(); // Load the news
 
@@ -249,11 +256,21 @@ public class Settings {
 
         loadProperties(); // Load the users Properties
 
+        if (this.isUsingCustomJavaPath()) {
+            checkForValidJavaPath(true); // Checks for a valid Java path
+        }
+
         console.setupLanguage(); // Setup language on the console
+
+        clearOldLogs(); // Clear all the old logs out
 
         checkResources(); // Check for new format of resources
 
         checkAccountUUIDs(); // Check for accounts UUID's and add them if necessary
+
+        changeInstanceUserLocks(); // Changes any instances user locks to UUIDs if available
+
+        checkAccountsForNameChanges(); // Check account for username changes
 
         LogManager.debug("Checking for access to master server");
         OUTER:
@@ -275,10 +292,10 @@ public class Settings {
         if (Utils.isWindows() && this.javaPath.contains("x86")) {
             LogManager.warn("You're using 32 bit Java on a 64 bit Windows install!");
             String[] options = {Language.INSTANCE.localize("common.yes"), Language.INSTANCE.localize("common.no")};
-            int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">" + Language
-                    .INSTANCE.localizeWithReplace("settings.running32bit", "<br/><br/>") + "</p></html>", Language
-                    .INSTANCE.localize("settings.running32bittitle"), JOptionPane.DEFAULT_OPTION, JOptionPane
-                    .ERROR_MESSAGE, null, options, options[0]);
+            int ret = JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language
+                    .INSTANCE.localizeWithReplace("settings.running32bit", "<br/><br/>")), Language.INSTANCE.localize
+                    ("settings.running32bittitle"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                    options, options[0]);
             if (ret == 0) {
                 Utils.openBrowser("http://www.atlauncher.com/help/32bit/");
                 System.exit(0);
@@ -290,35 +307,15 @@ public class Settings {
             String[] options = {Language.INSTANCE.localize("common.download"), Language.INSTANCE.localize("common" +
                     ".ok"), Language.INSTANCE.localize("instance" + "" +
                     ".dontremindmeagain")};
-            int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">" + Language
-                    .INSTANCE.localizeWithReplace("settings.unsupportedjava", "<br/><br/>") + "</p></html>", Language
-                    .INSTANCE.localize("settings.unsupportedjavatitle"), JOptionPane.DEFAULT_OPTION, JOptionPane
+            int ret = JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language
+                    .INSTANCE.localizeWithReplace("settings.unsupportedjava", "<br/><br/>")), Language.INSTANCE
+                    .localize("settings.unsupportedjavatitle"), JOptionPane.DEFAULT_OPTION, JOptionPane
                     .ERROR_MESSAGE, null, options, options[0]);
             if (ret == 0) {
-                Utils.openBrowser("http://www.oracle.com/technetwork/java/javase/downloads/jre7-downloads-1880261" +
-                        ".html");
+                Utils.openBrowser("http://atl.pw/java7download");
                 System.exit(0);
             } else if (ret == 2) {
                 this.hideOldJavaWarning = true;
-                this.saveProperties();
-            }
-        }
-
-        if (Utils.isJava8() && !this.hideJava8Warning) {
-            LogManager.warn("You're using a possible game breaking version of Java (Java 8)!");
-            String[] options = {Language.INSTANCE.localize("common.download"), Language.INSTANCE.localize("common" +
-                    ".ok"), Language.INSTANCE.localize("instance" + "" +
-                    ".dontremindmeagain")};
-            int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">" + Language
-                    .INSTANCE.localizeWithReplace("settings.java8warning", "<br/><br/>") + "</p></html>", Language
-                    .INSTANCE.localize("settings.java8warningtitle"), JOptionPane.DEFAULT_OPTION, JOptionPane
-                    .ERROR_MESSAGE, null, options, options[0]);
-            if (ret == 0) {
-                Utils.openBrowser("http://www.oracle.com/technetwork/java/javase/downloads/jre7-downloads-1880261" +
-                        ".html");
-                System.exit(0);
-            } else if (ret == 2) {
-                this.hideJava8Warning = true;
                 this.saveProperties();
             }
         }
@@ -333,6 +330,47 @@ public class Settings {
 
         if (this.enableServerChecker) {
             this.startCheckingServers();
+        }
+
+        if (this.enableLogs) {
+            App.TASKPOOL.execute(new Runnable() {
+                @Override
+                public void run() {
+                    ATLauncherAPIUtils.postSystemInfo();
+                }
+            });
+        }
+    }
+
+    private void checkAccountsForNameChanges() {
+        LogManager.info("Checking For Username Changes");
+
+        boolean somethingChanged = false;
+
+        for (Account account : this.accounts) {
+            if (account.checkForUsernameChange()) {
+                somethingChanged = true;
+            }
+        }
+
+        if (somethingChanged) {
+            this.saveAccounts();
+        }
+
+        LogManager.info("Checking For Username Changes Complete");
+    }
+
+    public void checkForValidJavaPath(boolean save) {
+        File java = new File(App.settings.getJavaPath(), "bin" + File.separator + "java" +
+                (Utils.isWindows() ? ".exe" : ""));
+
+        if (!java.exists()) {
+            LogManager.error("Custom Java Path Is Incorrect! Defaulting to valid value!");
+            this.setJavaPath(Utils.getJavaHome());
+
+            if (save) {
+                this.saveProperties();
+            }
         }
     }
 
@@ -368,10 +406,10 @@ public class Settings {
         if (matches) {
             String[] options = {Language.INSTANCE.localize("common.ok"), Language.INSTANCE.localize("account" + "" +
                     ".removepasswords")};
-            int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">" + Language
-                    .INSTANCE.localizeWithReplace("account.securitywarning", "<br/>") + "</p></html>", Language
-                    .INSTANCE.localize("account.securitywarningtitle"), JOptionPane.DEFAULT_OPTION, JOptionPane
-                    .ERROR_MESSAGE, null, options, options[0]);
+            int ret = JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language
+                    .INSTANCE.localizeWithReplace("account.securitywarning", "<br/>")), Language.INSTANCE.localize
+                    ("account.securitywarningtitle"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                    options, options[0]);
             if (ret == 1) {
                 for (Account account : this.accounts) {
                     if (account.isRemembered()) {
@@ -382,6 +420,75 @@ public class Settings {
             }
         }
         this.saveProperties();
+    }
+
+    public void clearOldLogs() {
+        LogManager.debug("Clearing out old logs");
+
+        File logFile1 = new File(getBaseDir(), Constants.LAUNCHER_NAME + "-Log-1.txt");
+        File logFile2 = new File(getBaseDir(), Constants.LAUNCHER_NAME + "-Log-2.txt");
+        File logFile3 = new File(getBaseDir(), Constants.LAUNCHER_NAME + "-Log-3.txt");
+
+        if (logFile3.exists()) {
+            Utils.delete(logFile3);
+        }
+
+        if (logFile2.exists()) {
+            Utils.delete(logFile2);
+        }
+
+        if (logFile1.exists()) {
+            Utils.delete(logFile1);
+        }
+
+        Date toDeleteAfter = new Date();
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(toDeleteAfter);
+        calendar.add(Calendar.DATE, -(getDaysOfLogsToKeep()));
+        toDeleteAfter = calendar.getTime();
+
+        for (File file : this.logsDir.listFiles(Utils.getLogsFileFilter())) {
+            try {
+                Date date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").parse(file.getName().replace(Constants
+                        .LAUNCHER_NAME + "-Log_", "").replace(".log", ""));
+
+                if (date.before(toDeleteAfter)) {
+                    Utils.delete(file);
+                    LogManager.debug("Deleting log file " + file.getName());
+                }
+            } catch (java.text.ParseException e) {
+                LogManager.error("Invalid log file " + file.getName());
+            }
+        }
+
+        LogManager.debug("Finished clearing out old logs");
+    }
+
+    public void clearAllLogs() {
+        File logFile1 = new File(getBaseDir(), Constants.LAUNCHER_NAME + "-Log-1.txt");
+        File logFile2 = new File(getBaseDir(), Constants.LAUNCHER_NAME + "-Log-2.txt");
+        File logFile3 = new File(getBaseDir(), Constants.LAUNCHER_NAME + "-Log-3.txt");
+
+        if (logFile3.exists()) {
+            Utils.delete(logFile3);
+        }
+
+        if (logFile2.exists()) {
+            Utils.delete(logFile2);
+        }
+
+        if (logFile1.exists()) {
+            Utils.delete(logFile1);
+        }
+
+        for (File file : this.logsDir.listFiles(Utils.getLogsFileFilter())) {
+            if (file.getName().equals(LoggingThread.filename)) {
+                continue; // Skip current log
+            }
+
+            Utils.delete(file);
+        }
     }
 
     public void checkResources() {
@@ -420,12 +527,55 @@ public class Settings {
         LogManager.debug("Checking account UUID's");
         LogManager.info("Checking account UUID's!");
         for (Account account : this.accounts) {
-            if (account.getUUID() == null) {
-                account.setUUID(Authentication.getUUID(account.getMinecraftUsername()));
+            if (account.isUUIDNull()) {
+                account.setUUID(MojangAPIUtils.getUUID(account.getMinecraftUsername()));
                 this.saveAccounts();
             }
         }
         LogManager.debug("Finished checking account UUID's");
+    }
+
+    public void changeInstanceUserLocks() {
+        LogManager.debug("Changing instances user locks to UUID's");
+
+        boolean wereChanges = false;
+
+        for (Instance instance : this.instances) {
+            if (instance.getInstalledBy() != null) {
+                boolean found = false;
+
+                for (Account account : this.accounts) {
+                    // This is the user who installed this so switch to their UUID
+                    if (account.getMinecraftUsername().equalsIgnoreCase(instance.getInstalledBy())) {
+                        found = true;
+                        wereChanges = true;
+
+                        instance.removeInstalledBy();
+
+                        // If the accounts UUID is null for whatever reason, don't set the lock
+                        if (!account.isUUIDNull()) {
+                            instance.setUserLock(account.getUUIDNoDashes());
+                        }
+                        break;
+                    }
+                }
+
+                // If there were no accounts with that username, we remove the lock and old installed by
+                if (!found) {
+                    wereChanges = true;
+
+                    instance.removeInstalledBy();
+                    instance.removeUserLock();
+                }
+            }
+        }
+
+        if (wereChanges) {
+            this.saveAccounts();
+            this.saveInstances();
+        }
+
+        LogManager.debug("Finished changing instances user locks to UUID's");
     }
 
     public void checkMojangStatus() {
@@ -472,8 +622,8 @@ public class Settings {
 
     public boolean launcherHasUpdate() {
         try {
-            this.latestLauncherVersion = gson.fromJson(new FileReader(new File(this.jsonDir, "version.json")),
-                    LauncherVersion.class);
+            this.latestLauncherVersion = Gsons.DEFAULT.fromJson(new FileReader(new File(this.jsonDir, "version.json")
+            ), LauncherVersion.class);
         } catch (JsonSyntaxException e) {
             this.logStackTrace("Exception when loading latest launcher version!", e);
         } catch (JsonIOException e) {
@@ -481,10 +631,14 @@ public class Settings {
         } catch (FileNotFoundException e) {
             this.logStackTrace("Exception when loading latest launcher version!", e);
         }
-        if (this.latestLauncherVersion == null) {
-            return false;
-        }
-        return Constants.VERSION.needsUpdate(this.latestLauncherVersion);
+
+        return this.latestLauncherVersion != null && Constants.VERSION.needsUpdate(this.latestLauncherVersion);
+    }
+
+    public boolean launcherHasBetaUpdate() {
+        Downloadable downloadable = new Downloadable("https://api.atlauncher.com/v1/build/atlauncher/build/", false);
+        APIResponseInt response = Gsons.DEFAULT.fromJson(downloadable.getContents(), APIResponseInt.class);
+        return response.getData() > Constants.VERSION.getBuild();
     }
 
     public void downloadUpdate() {
@@ -501,7 +655,30 @@ public class Settings {
             }
             File newFile = new File(getTempDir(), saveAs);
             LogManager.info("Downloading Launcher Update");
-            Downloadable update = new Downloadable("ATLauncher." + toget, newFile, null, null, true);
+            Downloadable update = new Downloadable(Constants.LAUNCHER_NAME + "." + toget, newFile, null, null, true);
+            update.download(false);
+            runUpdate(path, newFile.getAbsolutePath());
+        } catch (IOException e) {
+            this.logStackTrace(e);
+        }
+    }
+
+    public void downloadBetaUpdate() {
+        try {
+            File thisFile = new File(Update.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+            String path = thisFile.getCanonicalPath();
+            path = URLDecoder.decode(path, "UTF-8");
+            String toget;
+            String saveAs = thisFile.getName();
+            if (path.contains(".exe")) {
+                toget = "exe";
+            } else {
+                toget = "jar";
+            }
+            File newFile = new File(getTempDir(), saveAs);
+            LogManager.info("Downloading Launcher Update");
+            Downloadable update = new Downloadable("https://api.atlauncher.com/v1/build/atlauncher/download/" +
+                    toget, newFile, null, null, false);
             update.download(false);
             runUpdate(path, newFile.getAbsolutePath());
         } catch (IOException e) {
@@ -542,7 +719,15 @@ public class Settings {
         Downloadable download = new Downloadable("launcher/json/hashes.json", true);
         java.lang.reflect.Type type = new TypeToken<List<DownloadableFile>>() {
         }.getType();
-        this.launcherFiles = gson.fromJson(download.getContents(), type);
+
+        String contents = download.getContents();
+
+        try {
+            this.launcherFiles = Gsons.DEFAULT.fromJson(contents, type);
+        } catch (Exception e) {
+            String result = Utils.uploadPaste(Constants.LAUNCHER_NAME + " Error", contents);
+            this.logStackTrace("Error loading in file hashes! See error details at " + result, e);
+        }
     }
 
     /**
@@ -655,19 +840,81 @@ public class Settings {
                 downloadUpdate(); // Update the Launcher
             } else {
                 String[] options = {"Ok"};
-                int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">Launcher " +
-                        "Update failed. Please click Ok to close " + "the launcher and open up the downloads " +
-                        "page" +
-                        ".<br/><br/>Download " + "the update and replace the old ATLauncher file" +
-                        ".</p></html>", "Update Failed!", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE,
-                        null, options, options[0]);
-                if (ret == 0) {
-                    Utils.openBrowser("http://www.atlauncher.com/downloads/");
-                    System.exit(0);
+                JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph("Update failed. " +
+                        "Please click Ok to close " + "the launcher and open up the downloads " +
+                        "page.<br/><br/>Download " + "the update and replace the old " + Constants.LAUNCHER_NAME + " " +
+                        "file."), "Update Failed!", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                        options, options[0]);
+                Utils.openBrowser("http://www.atlauncher.com/downloads/");
+                System.exit(0);
+            }
+        } else if (Constants.VERSION.isBeta() && launcherHasBetaUpdate()) {
+            downloadBetaUpdate();
+        }
+        LogManager.debug("Finished checking for launcher update");
+    }
+
+    /**
+     * Downloads and loads all external libraries used by the launcher as specified in the Configs/JSON/libraries.json
+     * file.
+     */
+    private void downloadExternalLibraries() {
+        LogManager.debug("Downloading external libraries");
+
+        FileReader fr = null;
+
+        try {
+            fr = new FileReader(new File(this.jsonDir, "libraries.json"));
+
+            java.lang.reflect.Type type = new TypeToken<List<LauncherLibrary>>() {
+            }.getType();
+
+            this.launcherLibraries = Gsons.DEFAULT.fromJson(fr, type);
+        } catch (Exception e) {
+            logStackTrace(e);
+        } finally {
+            if (fr != null) {
+                try {
+                    fr.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }
-        LogManager.debug("Finished checking for launcher update");
+
+        ExecutorService executor = Executors.newFixedThreadPool(getConcurrentConnections());
+
+        for (final LauncherLibrary library : this.launcherLibraries) {
+            executor.execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    Downloadable download = library.getDownloadable();
+
+                    if (download.needToDownload()) {
+                        LogManager.info("Downloading library " + library.getFilename() + "!");
+                        download.download(false);
+                    }
+                }
+            });
+        }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+        }
+
+        for (LauncherLibrary library : this.launcherLibraries) {
+            File file = library.getFile();
+
+            if (library.shouldAutoLoad() && !Utils.addToClasspath(file)) {
+                LogManager.error("Couldn't add " + file + " to the classpath!");
+                if (library.shouldExitOnFail()) {
+                    LogManager.error("Library is necessary so launcher will exit!");
+                    System.exit(1);
+                }
+            }
+        }
+
+        LogManager.debug("Finished downloading external libraries");
     }
 
     /**
@@ -675,8 +922,8 @@ public class Settings {
      */
     private void checkFolders() {
         File[] files = {backupsDir, configsDir, themesDir, jsonDir, commonConfigsDir, imagesDir, skinsDir, jarsDir,
-                resourcesDir, librariesDir, languagesDir, downloadsDir, instancesDir, serversDir, tempDir,
-                failedDownloadsDir};
+                resourcesDir, librariesDir, launcherLibrariesdir, languagesDir, downloadsDir, instancesDir,
+                serversDir, tempDir, failedDownloadsDir, logsDir};
         for (File file : files) {
             if (!file.exists()) {
                 file.mkdir();
@@ -811,6 +1058,15 @@ public class Settings {
     }
 
     /**
+     * Returns the launchers libraries directory
+     *
+     * @return File object for the libraries directory
+     */
+    public File getLauncherLibrariesDir() {
+        return this.launcherLibrariesdir;
+    }
+
+    /**
      * Returns the languages directory
      *
      * @return File object for the languages directory
@@ -869,36 +1125,19 @@ public class Settings {
     }
 
     /**
+     * Returns the logs directory
+     *
+     * @return File object for the logs directory
+     */
+    public File getLogsDir() {
+        return this.logsDir;
+    }
+
+    /**
      * Deletes all files in the Temp directory
      */
     public void clearTempDir() {
         Utils.deleteContents(getTempDir());
-    }
-
-    public void rotateLogFiles() {
-        File logFile1 = new File(getBaseDir(), "ATLauncher-Log-1.txt");
-        File logFile2 = new File(getBaseDir(), "ATLauncher-Log-2.txt");
-        File logFile3 = new File(getBaseDir(), "ATLauncher-Log-3.txt");
-        if (logFile3.exists()) {
-            Utils.delete(logFile3);
-        }
-        if (logFile2.exists()) {
-            logFile2.renameTo(logFile3);
-        }
-        if (logFile1.exists()) {
-            logFile1.renameTo(logFile2);
-        }
-        try {
-            logFile1.createNewFile();
-        } catch (IOException e) {
-            String[] options = {"OK"};
-            JOptionPane.showOptionDialog(null, "<html><p align=\"center\">Cannot create the log file.<br/><br/>Make " +
-                            "sure" + " you are running the Launcher from somewhere with<br/>write" + " permissions " +
-                            "for your " +
-                            "user account such as your Home/Users folder" + " or desktop.</p></html>", "Warning",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
-            System.exit(0);
-        }
     }
 
     /**
@@ -965,17 +1204,15 @@ public class Settings {
             }
         } catch (IOException e) {
             String[] options = {"OK"};
-            JOptionPane.showOptionDialog(null, "<html><p align=\"center\">Cannot create the config file" +
-                            ".<br/><br/>Make sure" + " you are running the Launcher from somewhere with<br/>write" +
-                            " " +
-                            "permissions for your user account such as your Home/Users folder" + " or desktop" +
-                            ".</p></html>", "Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null,
-                    options, options[0]);
+            JOptionPane.showOptionDialog(null, HTMLUtils.centerParagraph("Cannot create the config file" +
+                            ".<br/><br/>Make sure you're running the Launcher from somewhere with<br/>write" +
+                            " permissions for your user account such as your Home/Users folder or desktop."),
+                    "Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
             System.exit(0);
         }
         try {
             this.properties.load(new FileInputStream(propertiesFile));
-            this.theme = properties.getProperty("theme", "ATLauncher");
+            this.theme = properties.getProperty("theme", Constants.LAUNCHER_NAME);
             this.dateFormat = properties.getProperty("dateformat", "dd/M/yyy");
             if (!this.dateFormat.equalsIgnoreCase("dd/M/yyy") && !this.dateFormat.equalsIgnoreCase("M/dd/yyy") &&
                     !this.dateFormat.equalsIgnoreCase("yyy/M/dd")) {
@@ -1020,6 +1257,11 @@ public class Settings {
             this.concurrentConnections = Integer.parseInt(properties.getProperty("concurrentconnections", "8"));
             if (this.concurrentConnections < 1) {
                 this.concurrentConnections = 8;
+            }
+
+            this.daysOfLogsToKeep = Integer.parseInt(properties.getProperty("daysoflogstokeep", "7"));
+            if (this.daysOfLogsToKeep < 1 || this.daysOfLogsToKeep > 30) {
+                this.daysOfLogsToKeep = 7;
             }
         } catch (FileNotFoundException e) {
             logStackTrace(e);
@@ -1205,7 +1447,15 @@ public class Settings {
                 this.concurrentConnections = 8;
             }
 
-            this.theme = properties.getProperty("theme", "ATLauncher");
+            this.daysOfLogsToKeep = Integer.parseInt(properties.getProperty("daysoflogstokeep", "7"));
+            if (this.daysOfLogsToKeep < 1 || this.daysOfLogsToKeep > 30) {
+                // Days of logs to keep should be 1 or more but less than 30
+                LogManager.warn("Tried to set the number of days worth of logs to keep to " + this.daysOfLogsToKeep +
+                        " which is not valid! Must be between 1 and 30 inclusive. Setting back to default of 7!");
+                this.daysOfLogsToKeep = 7;
+            }
+
+            this.theme = properties.getProperty("theme", Constants.LAUNCHER_NAME);
 
             this.dateFormat = properties.getProperty("dateformat", "dd/M/yyy");
             if (!this.dateFormat.equalsIgnoreCase("dd/M/yyy") && !this.dateFormat.equalsIgnoreCase("M/dd/yyy") &&
@@ -1276,6 +1526,7 @@ public class Settings {
             properties.setProperty("proxytype", this.proxyType);
             properties.setProperty("servercheckerwait", this.serverCheckerWait + "");
             properties.setProperty("concurrentconnections", this.concurrentConnections + "");
+            properties.setProperty("daysoflogstokeep", this.daysOfLogsToKeep + "");
             properties.setProperty("theme", this.theme);
             properties.setProperty("dateformat", this.dateFormat);
             if (account != null) {
@@ -1287,7 +1538,7 @@ public class Settings {
             properties.setProperty("autobackup", this.autoBackup ? "true" : "false");
             properties.setProperty("notifybackup", this.notifyBackup ? "true" : "false");
             properties.setProperty("dropboxlocation", this.dropboxFolderLocation);
-            this.properties.store(new FileOutputStream(propertiesFile), "ATLauncher Settings");
+            this.properties.store(new FileOutputStream(propertiesFile), Constants.LAUNCHER_NAME + " Settings");
         } catch (FileNotFoundException e) {
             logStackTrace(e);
         } catch (IOException e) {
@@ -1343,64 +1594,6 @@ public class Settings {
         this.servers = new ArrayList<Server>(Arrays.asList(Constants.SERVERS));
     }
 
-    private void findActiveServers() {
-        LogManager.debug("Finding servers to use");
-
-        Downloadable download = new Downloadable(this.getMasterFileURL("launcher/json/servers.json"), false);
-
-        String response = download.getContents();
-
-        java.lang.reflect.Type type = new TypeToken<List<Server>>() {
-        }.getType();
-
-        if (response != null) {
-            try {
-                this.servers = gson.fromJson(response, type);
-            } catch (Exception e) {
-                logStackTrace("Exception when reading in the servers", e);
-                this.servers = new ArrayList<Server>(Arrays.asList(Constants.SERVERS));
-            }
-        }
-
-        LogManager.debug("Finished finding servers to use");
-    }
-
-    private void checkCreeperRepoEdges() {
-        LogManager.debug("Checking CreeperRepo edges for availability");
-        // Check CreeperHosts available edges (servers)
-        JSONParser parser = new JSONParser();
-        try {
-            Downloadable download = new Downloadable("http://www.creeperrepo.net/edges.json", false);
-            String response = download.getContents();
-            if (response != null) {
-                Object obj = parser.parse(response);
-                JSONObject jsonObject = (JSONObject) obj;
-                Collection<String> values = jsonObject.values();
-                for (Server server : this.servers) {
-                    if (!server.isMaster() && !server.getName().equalsIgnoreCase("Auto")) {
-                        if (!values.contains(server.getHost())) {
-                            LogManager.warn("Server " + server.getHost() + " is no longer available!");
-                            server.disableServer();
-                        }
-                    }
-                }
-            }
-
-            ArrayList<Server> newServers = new ArrayList<Server>();
-
-            for (Server server : this.servers) {
-                if (!server.isDisabled()) {
-                    newServers.add(server);
-                }
-            }
-
-            this.servers = newServers;
-        } catch (ParseException e) {
-            this.logStackTrace(e);
-        }
-        LogManager.debug("Finished checking CreeperRepo edges for availability");
-    }
-
     public boolean disableServerGetNext() {
         this.server.disableServer(); // Disable the server
         for (Server server : this.servers) {
@@ -1414,13 +1607,16 @@ public class Settings {
     }
 
     public void clearTriedServers() {
-        this.triedServers = new ArrayList<Server>(); // Clear the list
+        if (this.triedServers.size() != 0) {
+            this.triedServers = new ArrayList<Server>(); // Clear the list
+            this.server = this.originalServer;
+        }
     }
 
     public boolean getNextServer() {
         this.triedServers.add(this.server);
         for (Server server : this.servers) {
-            if (!this.triedServers.contains(server) && !server.isDisabled() && server.isUserSelectable()) {
+            if (!this.triedServers.contains(server) && !server.isDisabled()) {
                 LogManager.warn("Server " + this.server.getName() + " Not Available! Switching To " + server.getName());
                 this.server = server; // Setup next available server
                 return true;
@@ -1437,12 +1633,20 @@ public class Settings {
         try {
             java.lang.reflect.Type type = new TypeToken<List<News>>() {
             }.getType();
-            this.news = gson.fromJson(new FileReader(new File(getJSONDir(), "news.json")), type);
+            File fileDir = new File(getJSONDir(), "news.json");
+            BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileDir), "UTF-8"));
+
+            this.news = Gsons.DEFAULT.fromJson(in, type);
+            in.close();
         } catch (JsonSyntaxException e) {
             logStackTrace(e);
         } catch (JsonIOException e) {
             logStackTrace(e);
         } catch (FileNotFoundException e) {
+            logStackTrace(e);
+        } catch (UnsupportedEncodingException e) {
+            logStackTrace(e);
+        } catch (IOException e) {
             logStackTrace(e);
         }
         LogManager.debug("Finished loading news");
@@ -1458,7 +1662,7 @@ public class Settings {
         try {
             java.lang.reflect.Type type = new TypeToken<List<MinecraftVersion>>() {
             }.getType();
-            list = gson.fromJson(new FileReader(new File(getJSONDir(), "minecraftversions.json")), type);
+            list = Gsons.DEFAULT.fromJson(new FileReader(new File(getJSONDir(), "minecraftversions.json")), type);
         } catch (JsonSyntaxException e) {
             logStackTrace(e);
         } catch (JsonIOException e) {
@@ -1503,7 +1707,7 @@ public class Settings {
         try {
             java.lang.reflect.Type type = new TypeToken<List<Pack>>() {
             }.getType();
-            this.packs = gson.fromJson(new FileReader(new File(getJSONDir(), "packs.json")), type);
+            this.packs = Gsons.DEFAULT.fromJson(new FileReader(new File(getJSONDir(), "packs.json")), type);
         } catch (JsonSyntaxException e) {
             logStackTrace(e);
         } catch (JsonIOException e) {
@@ -1524,7 +1728,7 @@ public class Settings {
         try {
             java.lang.reflect.Type type = new TypeToken<List<PackUsers>>() {
             }.getType();
-            packUsers = gson.fromJson(download.getContents(), type);
+            packUsers = Gsons.DEFAULT.fromJson(download.getContents(), type);
         } catch (JsonSyntaxException e) {
             logStackTrace(e);
         } catch (JsonIOException e) {
@@ -1588,22 +1792,30 @@ public class Settings {
             for (String folder : this.getInstancesDir().list(Utils.getInstanceFileFilter())) {
                 File instanceDir = new File(this.getInstancesDir(), folder);
                 FileReader fileReader;
+
+                Instance instance = null;
+
                 try {
                     fileReader = new FileReader(new File(instanceDir, "instance.json"));
-                } catch (FileNotFoundException e) {
-                    logStackTrace(e);
+                    instance = Gsons.DEFAULT.fromJson(fileReader, Instance.class);
+                } catch (Exception e) {
+                    logStackTrace("Failed to load instance in the folder " + instanceDir, e);
                     continue; // Instance.json not found for some reason, continue before loading
                 }
-                Instance instance = Settings.gson.fromJson(fileReader, Instance.class);
+
                 if (instance == null) {
+                    LogManager.error("Failed to load instance in the folder " + instanceDir);
                     continue;
                 }
+
                 if (!instance.getDisabledModsDirectory().exists()) {
                     instance.getDisabledModsDirectory().mkdir();
                 }
+
                 if (isPackByName(instance.getPackName())) {
                     instance.setRealPack(getPackByName(instance.getPackName()));
                 }
+
                 this.instances.add(instance);
             }
             if (instancesDataFile.exists()) {
@@ -1625,7 +1837,7 @@ public class Settings {
 
                 fw = new FileWriter(instanceFile);
                 bw = new BufferedWriter(fw);
-                bw.write(Settings.gson.toJson(instance));
+                bw.write(Gsons.DEFAULT.toJson(instance));
             } catch (IOException e) {
                 App.settings.logStackTrace(e);
             } finally {
@@ -1734,7 +1946,7 @@ public class Settings {
                 return;
             }
 
-            this.checkingServers = gson.fromJson(fileReader, MinecraftServer.LIST_TYPE);
+            this.checkingServers = Gsons.DEFAULT.fromJson(fileReader, MinecraftServer.LIST_TYPE);
 
             if (fileReader != null) {
                 try {
@@ -1758,7 +1970,7 @@ public class Settings {
 
             fw = new FileWriter(checkingServersFile);
             bw = new BufferedWriter(fw);
-            bw.write(Settings.gson.toJson(this.checkingServers));
+            bw.write(Gsons.DEFAULT.toJson(this.checkingServers));
         } catch (IOException e) {
             App.settings.logStackTrace(e);
         } finally {
@@ -1949,6 +2161,19 @@ public class Settings {
         return false;
     }
 
+    public Pack getSemiPublicPackByCode(String packCode) {
+        String packCodeMD5 = Utils.getMD5(packCode);
+        for (Pack pack : this.packs) {
+            if (pack.isSemiPublic()) {
+                if (pack.getCode().equalsIgnoreCase(packCodeMD5)) {
+                    return pack;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public boolean addPack(String packCode) {
         String packCodeMD5 = Utils.getMD5(packCode);
         for (Pack pack : this.packs) {
@@ -1959,7 +2184,7 @@ public class Settings {
                     }
                     this.addedPacks += packCode + ",";
                     this.saveProperties();
-                    this.reloadInstancesPanel();
+                    this.refreshPacksPanel();
                     return true;
                 }
             }
@@ -1972,7 +2197,7 @@ public class Settings {
             if (Utils.getMD5(code).equalsIgnoreCase(packCode)) {
                 this.addedPacks = this.addedPacks.replace(code + ",", ""); // Remove the string
                 this.saveProperties();
-                this.reloadInstancesPanel();
+                this.refreshPacksPanel();
             }
         }
     }
@@ -2137,6 +2362,13 @@ public class Settings {
     }
 
     /**
+     * Refreshes the panel used for Packs
+     */
+    public void refreshPacksPanel() {
+        this.packsPanel.refresh(); // Refresh the instances panel
+    }
+
+    /**
      * Sets the bottom bar
      *
      * @param bottomBar The Bottom Bar
@@ -2210,6 +2442,21 @@ public class Settings {
     public Pack getPackByName(String name) {
         for (Pack pack : packs) {
             if (pack.getName().equalsIgnoreCase(name)) {
+                return pack;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds a Pack from the given safe name
+     *
+     * @param name name of the Pack to find
+     * @return Pack if the pack is found from the safe name
+     */
+    public Pack getPackBySafeName(String name) {
+        for (Pack pack : packs) {
+            if (pack.getSafeName().equalsIgnoreCase(name)) {
                 return pack;
             }
         }
@@ -2297,7 +2544,7 @@ public class Settings {
      * @param username Username of the Account to find
      * @return Account if the Account is found from the username
      */
-    private Account getAccountByName(String username) {
+    public Account getAccountByName(String username) {
         for (Account account : accounts) {
             if (account.getUsername().equalsIgnoreCase(username)) {
                 return account;
@@ -2408,10 +2655,16 @@ public class Settings {
      */
     public void logStackTrace(Exception exception) {
         exception.printStackTrace();
-        LogManager.error(exception.getMessage());
-        for (StackTraceElement element : exception.getStackTrace()) {
-            if (element.toString() != null) {
-                LogManager.error(element.toString());
+
+        if (exception.getMessage() != null) {
+            LogManager.error(exception.getMessage());
+        }
+
+        if (exception.getStackTrace() != null) {
+            for (StackTraceElement element : exception.getStackTrace()) {
+                if (element != null) {
+                    LogManager.error(element.toString());
+                }
             }
         }
     }
@@ -2419,7 +2672,7 @@ public class Settings {
     /**
      * Logs a stack trace to the console window with a custom message before it
      *
-     * @param message   A message regarding the stack trace to show before it providing more insight
+     * @param message A message regarding the stack trace to show before it providing more insight
      * @param exception The exception to show in the console
      */
     public void logStackTrace(String message, Exception exception) {
@@ -2777,6 +3030,14 @@ public class Settings {
         this.concurrentConnections = concurrentConnections;
     }
 
+    public int getDaysOfLogsToKeep() {
+        return this.daysOfLogsToKeep;
+    }
+
+    public void setDaysOfLogsToKeep(int daysOfLogsToKeep) {
+        this.daysOfLogsToKeep = daysOfLogsToKeep;
+    }
+
     public String getTheme() {
         return this.theme;
     }
@@ -2786,7 +3047,7 @@ public class Settings {
     }
 
     public File getThemeFile() {
-        File theme = new File(this.themesDir, this.theme + ".json");
+        File theme = new File(this.themesDir, this.theme + ".zip");
         if (theme.exists()) {
             return theme;
         } else {
@@ -2827,8 +3088,32 @@ public class Settings {
         return this.proxy;
     }
 
+    public Proxy getProxyForAuth() {
+        if (!this.enableProxy) {
+            return Proxy.NO_PROXY;
+        }
+        if (this.proxy == null) {
+            Type type;
+            if (this.proxyType.equals("HTTP")) {
+                type = Proxy.Type.HTTP;
+            } else if (this.proxyType.equals("SOCKS")) {
+                type = Proxy.Type.SOCKS;
+            } else if (this.proxyType.equals("DIRECT")) {
+                type = Proxy.Type.DIRECT;
+            } else {
+                // Oh noes, problem!
+                LogManager.warn("Tried to set proxy type to " + this.proxyType + " which is not valid! Proxy support " +
+                        "disabled!");
+                this.enableProxy = false;
+                return Proxy.NO_PROXY;
+            }
+            this.proxy = new Proxy(type, new InetSocketAddress(this.proxyHost, this.proxyPort));
+        }
+        return this.proxy;
+    }
+
     public String getUserAgent() {
-        return this.userAgent + " ATLauncher/" + Constants.VERSION;
+        return this.userAgent + Constants.LAUNCHER_NAME + "/" + Constants.VERSION;
     }
 
     /**

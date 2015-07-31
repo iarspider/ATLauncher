@@ -18,12 +18,15 @@
 package com.atlauncher.gui.dialogs;
 
 import com.atlauncher.App;
+import com.atlauncher.Gsons;
 import com.atlauncher.LogManager;
 import com.atlauncher.data.Language;
-import com.atlauncher.data.Mod;
+import com.atlauncher.data.json.Mod;
 import com.atlauncher.gui.components.ModsJCheckBox;
 import com.atlauncher.utils.Utils;
 import com.atlauncher.workers.InstanceInstaller;
+import com.google.gson.reflect.TypeToken;
+import io.github.asyncronous.toast.Toaster;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -41,21 +44,24 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ModsChooser extends JDialog {
     private static final long serialVersionUID = -5309108183485463434L;
     private InstanceInstaller installer;
+    private JButton useShareCode;
     private JButton selectAllButton;
     private JButton clearAllButton;
+    private JButton installButton;
     private List<ModsJCheckBox> modCheckboxes;
+    private List<ModsJCheckBox> sortedOut;
 
     private boolean wasClosed = false;
 
     public ModsChooser(InstanceInstaller installerr) {
-        super(App.settings.getParent(), Language.INSTANCE.localize("instance.selectmods"),
-                ModalityType.APPLICATION_MODAL);
+        super(App.settings.getParent(), Language.INSTANCE.localize("instance.selectmods"), ModalityType
+                .APPLICATION_MODAL);
         this.installer = installerr;
-        setSize(550, 450);
         setIconImage(Utils.getImage("/assets/image/Icon.png"));
         setLocationRelativeTo(App.settings.getParent());
         setLayout(new BorderLayout());
@@ -106,24 +112,37 @@ public class ModsChooser extends JDialog {
         checkBoxPanel1.setLayout(null);
         checkBoxPanel1.setBackground(App.THEME.getModSelectionBackgroundColor());
 
-        JScrollPane scroller1 = new JScrollPane(checkBoxPanel1, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        JScrollPane scroller1 = new JScrollPane(checkBoxPanel1, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane
+                .HORIZONTAL_SCROLLBAR_NEVER);
         scroller1.getVerticalScrollBar().setUnitIncrement(16);
-        scroller1.setPreferredSize(new Dimension(275, 350));
         modsInPack.setRightComponent(scroller1);
 
         JPanel checkBoxPanel2 = new JPanel();
         checkBoxPanel2.setLayout(null);
         checkBoxPanel2.setBackground(App.THEME.getModSelectionBackgroundColor());
 
-        JScrollPane scroller2 = new JScrollPane(checkBoxPanel2, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        JScrollPane scroller2 = new JScrollPane(checkBoxPanel2, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane
+                .HORIZONTAL_SCROLLBAR_NEVER);
         scroller2.getVerticalScrollBar().setUnitIncrement(16);
-        scroller2.setPreferredSize(new Dimension(275, 350));
         modsInPack.setLeftComponent(scroller2);
 
         JPanel bottomPanel = new JPanel();
         add(bottomPanel, BorderLayout.SOUTH);
+
+        useShareCode = new JButton();
+        useShareCode.setText(Language.INSTANCE.localize("instance.usesharecode"));
+        useShareCode.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String ret = JOptionPane.showInputDialog(null, Language.INSTANCE.localize("instance.entersharecode"),
+                        Language.INSTANCE.localize("instance.sharecode"), JOptionPane.QUESTION_MESSAGE);
+
+                if (ret != null) {
+                    applyShareCode(ret);
+                }
+            }
+        });
+        bottomPanel.add(useShareCode);
 
         selectAllButton = new JButton();
 
@@ -136,14 +155,11 @@ public class ModsChooser extends JDialog {
         selectAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 for (ModsJCheckBox check : modCheckboxes) {
-                    if (check.isCategory()) {
-                        continue;
-                    }
                     if ((installer.isServer() ? check.getMod().isServerOptional() : check.getMod().isOptional())) {
-                        if (check.getMod().isRecommeneded()) {
+                        if (check.getMod().isRecommended()) {
                             if (check.getMod().hasGroup()) {
-                                if (check.getMod().isRecommeneded() && installer.isOnlyRecommendedInGroup(check
-                                        .getMod())) {
+                                if (check.getMod().isRecommended() && installer.isOnlyRecommendedInGroup(check.getMod
+                                        ())) {
                                     check.setSelected(true);
                                     check.setEnabled(true);
                                     sortOutMods(check);
@@ -168,9 +184,6 @@ public class ModsChooser extends JDialog {
         clearAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 for (ModsJCheckBox check : modCheckboxes) {
-                    if (check.isCategory()) {
-                        continue;
-                    }
                     if ((installer.isServer() ? check.getMod().isServerOptional() : check.getMod().isOptional())) {
                         check.setSelected(false);
                         List<Mod> linkedMods = modsToChange(check.getMod());
@@ -187,7 +200,7 @@ public class ModsChooser extends JDialog {
         });
         bottomPanel.add(clearAllButton);
 
-        JButton installButton = new JButton(Language.INSTANCE.localize("common.install"));
+        installButton = new JButton(Language.INSTANCE.localize("common.install"));
         installButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 dispose();
@@ -196,7 +209,6 @@ public class ModsChooser extends JDialog {
         bottomPanel.add(installButton);
 
         modCheckboxes = new ArrayList<ModsJCheckBox>();
-        ArrayList<String> categoriesDone = new ArrayList<String>();
         int count1 = 0;
         int count2 = 0;
 
@@ -208,22 +220,11 @@ public class ModsChooser extends JDialog {
             }
             ModsJCheckBox checkBox = null;
             if ((installer.isServer() ? mod.isServerOptional() : mod.isOptional())) {
-                if (!mod.getCategory().isEmpty()) {
-                    if (!categoriesDone.contains(mod.getCategory())) {
-                        skip = true;
-                        categoriesDone.add(mod.getCategory());
-                        checkBox = new ModsJCheckBox(installerr.getCategoryName(mod.getCategory()));
-                        checkBox.setBounds(0, (count1 * 20), checkBox.getPreferredSize().width, 20);
-                        checkBox.setEnabled(false);
-                        count1++;
-                    }
-                }
                 if (!skip) {
                     checkBox = new ModsJCheckBox(mod);
                     checkBox.setEnabled(true);
-                    if (mod.getLinked().isEmpty()) {
-                        checkBox.setBounds((mod.hasCategory() ? 20 : 0), (count1 * 20),
-                                checkBox.getPreferredSize().width, 20);
+                    if (!mod.hasLinked()) {
+                        checkBox.setBounds(0, (count1 * 20), checkBox.getPreferredSize().width, 20);
                     } else {
                         Mod linkedMod = installer.getModByName(mod.getLinked());
                         if (linkedMod == null) {
@@ -234,11 +235,9 @@ public class ModsChooser extends JDialog {
                         }
                         if ((installer.isServer() ? linkedMod.isServerOptional() : linkedMod.isOptional())) {
                             checkBox.setEnabled(false);
-                            checkBox.setBounds((mod.hasCategory() ? 40 : 20), (count1 * 20),
-                                    checkBox.getPreferredSize().width, 20);
+                            checkBox.setBounds(20, (count1 * 20), checkBox.getPreferredSize().width, 20);
                         } else {
-                            checkBox.setBounds((mod.hasCategory() ? 20 : 0), (count1 * 20),
-                                    checkBox.getPreferredSize().width, 20);
+                            checkBox.setBounds(0, (count1 * 20), checkBox.getPreferredSize().width, 20);
                         }
                         if (mod.isSelected()) {
                             checkBox.setEnabled(true);
@@ -278,18 +277,18 @@ public class ModsChooser extends JDialog {
                     checkBox.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            if (finalCheckBox.isSelected()) {
-                                String message = installer.getPack().getWarningMessage(installer.getVersion()
-                                        .getVersion(), mod.getWarning());
+                            if (finalCheckBox.isSelected() && installer.getJsonVersion().hasWarningMessage(mod
+                                    .getWarning())) {
+                                String message = installer.getJsonVersion().getWarningMessage(mod.getWarning());
 
                                 if (message != null) {
-                                    String[] options = {Language.INSTANCE.localize("common.yes"),
-                                            Language.INSTANCE.localize("common.no")};
-                                    int ret = JOptionPane.showOptionDialog(App.settings.getParent(),
-                                            "<html>" + message + "<br/>" +
+                                    String[] options = {Language.INSTANCE.localize("common.yes"), Language.INSTANCE
+                                            .localize("common.no")};
+                                    int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html>" +
+                                                    message + "<br/>" +
                                                     Language.INSTANCE.localize("instance.warningsure") + "</html>",
-                                            Language.INSTANCE.localize("instance.warning"),
-                                            JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options,
+                                            Language.INSTANCE.localize("instance.warning"), JOptionPane
+                                                    .DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options,
                                             options[1]);
                                     if (ret != 0) {
                                         finalCheckBox.setSelected(false);
@@ -311,27 +310,25 @@ public class ModsChooser extends JDialog {
                     count2++;
                 }
             }
-            if (!checkBox.isCategory()) {
-                if (installer.isReinstall()) {
-                    if (installer.wasModInstalled(mod.getName())) {
-                        if ((installer.isServer() ? mod.isServerOptional() : mod.isOptional())) {
-                            checkBox.setSelected(true);
-                            checkBox.setEnabled(true);
-                        }
-                    }
-                } else {
-                    if ((installer.isServer() ? mod.isServerOptional() : mod.isOptional()) && mod.isSelected()) {
+            if (installer.isReinstall()) {
+                if (installer.wasModInstalled(mod.getName())) {
+                    if ((installer.isServer() ? mod.isServerOptional() : mod.isOptional())) {
                         checkBox.setSelected(true);
                         checkBox.setEnabled(true);
                     }
                 }
-                checkBox.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        ModsJCheckBox a = (ModsJCheckBox) e.getSource();
-                        sortOutMods(a);
-                    }
-                });
+            } else {
+                if ((installer.isServer() ? mod.isServerOptional() : mod.isOptional()) && mod.isSelected()) {
+                    checkBox.setSelected(true);
+                    checkBox.setEnabled(true);
+                }
             }
+            checkBox.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    ModsJCheckBox a = (ModsJCheckBox) e.getSource();
+                    sortOutMods(a, true);
+                }
+            });
             modCheckboxes.add(checkBox);
             if (!skip) {
                 i++;
@@ -339,16 +336,91 @@ public class ModsChooser extends JDialog {
         }
         for (int i = 0; i < modCheckboxes.size(); i++) {
             ModsJCheckBox checkBox = modCheckboxes.get(i);
-            if (checkBox.isCategory()) {
-                checkBoxPanel1.add(checkBox);
-            } else if ((installer.isServer() ? checkBox.getMod().isServerOptional() : checkBox.getMod().isOptional())) {
+            if ((installer.isServer() ? checkBox.getMod().isServerOptional() : checkBox.getMod().isOptional())) {
                 checkBoxPanel1.add(checkBox);
             } else {
                 checkBoxPanel2.add(checkBox);
             }
         }
+
+        sortedOut = new ArrayList<ModsJCheckBox>();
+        for (ModsJCheckBox cb : this.modCheckboxes) {
+            if ((installer.isServer() ? cb.getMod().isServerOptional() : cb.getMod().isOptional()) && cb.isSelected()) {
+                sortOutMods(cb);
+            }
+        }
+
         checkBoxPanel1.setPreferredSize(new Dimension(0, count1 * 20));
         checkBoxPanel2.setPreferredSize(new Dimension(0, count2 * 20));
+
+        setSize(calculateWidth(), 450);
+        scroller1.setPreferredSize(new Dimension(calculateWidth() / 2, 350));
+        scroller2.setPreferredSize(new Dimension(calculateWidth() / 2, 350));
+    }
+
+    private int calculateWidth() {
+        int width = 30;
+
+        width += useShareCode.getPreferredSize().width;
+        width += selectAllButton.getPreferredSize().width;
+        width += clearAllButton.getPreferredSize().width;
+        width += installButton.getPreferredSize().width;
+
+        if (width < 550) {
+            width = 550;
+        }
+
+        return width;
+    }
+
+    public void applyShareCode(String code) {
+        try {
+            String data = installer.getShareCodeData(code);
+
+            if (data == null) {
+                Toaster.instance().popError(Language.INSTANCE.localize("instance.invalidsharecode"));
+                return;
+            }
+
+            java.lang.reflect.Type type = new TypeToken<Map<String, List<Map<String, String>>>>() {
+            }.getType();
+
+            Map<String, List<Map<String, String>>> mods = Gsons.DEFAULT.fromJson(data, type);
+
+            if (mods == null) {
+                Toaster.instance().popError(Language.INSTANCE.localize("instance.invalidsharecode"));
+                return;
+            }
+
+            List<Map<String, String>> optionalMods = mods.get("optional");
+
+            if (optionalMods == null || optionalMods.size() == 0) {
+                Toaster.instance().popError(Language.INSTANCE.localize("instance.invalidsharecode"));
+                return;
+            }
+
+            for (ModsJCheckBox checkbox : this.modCheckboxes) {
+                if (!checkbox.getMod().isOptional()) {
+                    continue;
+                }
+
+                boolean found = false;
+
+                for (Map<String, String> mod : optionalMods) {
+                    if (mod.get("name").equalsIgnoreCase(checkbox.getMod().getName())) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found) {
+                    checkbox.setSelected(true);
+                }
+            }
+        } catch (Exception e) {
+            LogManager.error("Invalid share code!");
+            Toaster.instance().popError(Language.INSTANCE.localize("instance.invalidsharecode"));
+        }
     }
 
     private List<Mod> modsToChange(Mod mod) {
@@ -372,6 +444,14 @@ public class ModsChooser extends JDialog {
     }
 
     public void sortOutMods(ModsJCheckBox a) {
+        this.sortOutMods(a, false);
+    }
+
+    public void sortOutMods(ModsJCheckBox a, boolean firstGo) {
+        if (firstGo) {
+            sortedOut = new ArrayList<ModsJCheckBox>();
+        }
+
         if (a.isSelected()) {
             List<Mod> linkedMods = modsToChange(a.getMod());
             for (Mod mod : linkedMods) {
@@ -395,8 +475,10 @@ public class ModsChooser extends JDialog {
                 List<Mod> dependsMods = modsDependancies(a.getMod());
                 for (Mod mod : dependsMods) {
                     for (ModsJCheckBox check : modCheckboxes) {
-                        if (check.getMod() == mod) {
+                        if (check.getMod() == mod && !sortedOut.contains(check)) {
+                            sortedOut.add(check);
                             check.setSelected(true);
+                            sortOutMods(check);
                         }
                     }
                 }

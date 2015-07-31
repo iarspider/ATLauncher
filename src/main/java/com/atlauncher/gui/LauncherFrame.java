@@ -20,10 +20,13 @@ package com.atlauncher.gui;
 import com.atlauncher.App;
 import com.atlauncher.LogManager;
 import com.atlauncher.data.Constants;
+import com.atlauncher.data.Pack;
+import com.atlauncher.data.PackVersion;
 import com.atlauncher.evnt.listener.RelocalizationListener;
 import com.atlauncher.evnt.manager.RelocalizationManager;
 import com.atlauncher.evnt.manager.TabChangeManager;
 import com.atlauncher.gui.components.LauncherBottomBar;
+import com.atlauncher.gui.dialogs.InstanceInstallerDialog;
 import com.atlauncher.gui.tabs.AccountsTab;
 import com.atlauncher.gui.tabs.InstancesTab;
 import com.atlauncher.gui.tabs.NewsTab;
@@ -33,21 +36,19 @@ import com.atlauncher.gui.tabs.Tab;
 import com.atlauncher.gui.tabs.ToolsTab;
 import com.atlauncher.utils.Utils;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.util.Arrays;
-import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.util.Arrays;
+import java.util.List;
 
 @SuppressWarnings("serial")
-public final class LauncherFrame
-extends JFrame
-implements RelocalizationListener{
+public final class LauncherFrame extends JFrame implements RelocalizationListener {
     private JTabbedPane tabbedPane;
     private NewsTab newsTab;
     private PacksTab packsTab;
@@ -67,7 +68,7 @@ implements RelocalizationListener{
 
         App.settings.setParentFrame(this);
         setSize(new Dimension(1000, 615));
-        setTitle("ATLauncher " + Constants.VERSION);
+        setTitle(Constants.LAUNCHER_NAME + " " + Constants.VERSION);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -92,16 +93,57 @@ implements RelocalizationListener{
 
         RelocalizationManager.addListener(this);
 
-        App.TASKPOOL.execute(new Runnable(){
-            public void run(){
+        App.TASKPOOL.execute(new Runnable() {
+            public void run() {
                 App.settings.checkMojangStatus(); // Check Minecraft status
                 bottomBar.updateStatus(App.settings.getMojangStatus());
             }
         });
+
+        if (App.packToInstall != null) {
+            Pack pack = App.settings.getPackBySafeName(App.packToInstall);
+
+            if (pack != null && pack.isSemiPublic() && !App.settings.canViewSemiPublicPackByCode(pack.getCode())) {
+                LogManager.error("Error automatically installing " + pack.getName() + " as you don't have the " +
+                        "pack added to the launcher!");
+            } else {
+                if (App.settings.isInOfflineMode() || App.settings.getAccount() == null || pack == null) {
+                    LogManager.error("Error automatically installing " + (pack == null ? "pack" : pack.getName()) + "!");
+                } else {
+                    new InstanceInstallerDialog(pack);
+                }
+            }
+        } else if (App.packShareCodeToInstall != null) {
+            String[] parts = App.packShareCodeToInstall.split("\\|\\|\\|");
+
+            if (parts.length != 4) {
+                LogManager.error("Error automatically installing pack from share code!");
+            } else {
+                Pack pack = App.settings.getPackBySafeName(parts[0]);
+
+                if (pack != null && pack.isSemiPublic() && !App.settings.canViewSemiPublicPackByCode(pack.getCode())) {
+                    LogManager.error("Error automatically installing " + pack.getName() + " as you don't have the " +
+                            "pack added to the launcher!");
+                } else {
+                    if (pack == null) {
+                        LogManager.error("Error automatically installing pack from share code!");
+                    } else {
+                        PackVersion version = pack.getVersionByName(parts[1]);
+
+                        if (version == null) {
+                            LogManager.error("Error automatically installing " + pack.getName() + " from share code!");
+                        } else {
+                            new InstanceInstallerDialog(pack, version, parts[2], Boolean.parseBoolean(parts[3]));
+                        }
+                    }
+                }
+
+            }
+        }
     }
 
-    public void updateTitle(String str){
-        setTitle("ATLauncher " + Constants.VERSION + " - " + str);
+    public void updateTitle(String str) {
+        setTitle(Constants.LAUNCHER_NAME + " " + Constants.VERSION + " - " + str);
     }
 
     /**
@@ -127,13 +169,13 @@ implements RelocalizationListener{
         for (Tab tab : this.tabs) {
             this.tabbedPane.addTab(tab.getTitle(), (JPanel) tab);
         }
-        tabbedPane.addChangeListener(new ChangeListener(){
+        tabbedPane.addChangeListener(new ChangeListener() {
             @Override
-            public void stateChanged(ChangeEvent e){
+            public void stateChanged(ChangeEvent e) {
                 String tabName = ((Tab) tabbedPane.getSelectedComponent()).getTitle();
-                if(tabbedPane.getSelectedIndex() == 1){
+                if (tabbedPane.getSelectedIndex() == 1) {
                     updateTitle("Packs - " + App.settings.getPackInstallableCount());
-                } else{
+                } else {
                     updateTitle(tabName);
                 }
 

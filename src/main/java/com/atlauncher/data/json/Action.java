@@ -62,7 +62,7 @@ public class Action {
     public void convertMods(InstanceInstaller instanceInstaller) {
         Mod toAdd = null;
         for (String name : this.mod) {
-            toAdd = instanceInstaller.getJsonModByName(name);
+            toAdd = instanceInstaller.getModByName(name);
             if (toAdd != null) {
                 addMod(toAdd);
             }
@@ -90,21 +90,21 @@ public class Action {
                 }
                 switch (this.type) {
                     case mods:
-                        Utils.zip(instanceInstaller.getTempActionsDirectory(),
-                                new File(instanceInstaller.getModsDirectory(), saveAs));
+                        Utils.zip(instanceInstaller.getTempActionsDirectory(), new File(instanceInstaller
+                                .getModsDirectory(), saveAs));
                         break;
                     case coremods:
                         if (instanceInstaller.getVersion().getMinecraftVersion().usesCoreMods()) {
-                            Utils.zip(instanceInstaller.getTempActionsDirectory(),
-                                    new File(instanceInstaller.getCoreModsDirectory(), saveAs));
+                            Utils.zip(instanceInstaller.getTempActionsDirectory(), new File(instanceInstaller
+                                    .getCoreModsDirectory(), saveAs));
                         } else {
-                            Utils.zip(instanceInstaller.getTempActionsDirectory(),
-                                    new File(instanceInstaller.getModsDirectory(), saveAs));
+                            Utils.zip(instanceInstaller.getTempActionsDirectory(), new File(instanceInstaller
+                                    .getModsDirectory(), saveAs));
                         }
                         break;
                     case jar:
-                        Utils.zip(instanceInstaller.getTempActionsDirectory(),
-                                new File(instanceInstaller.getJarModsDirectory(), saveAs));
+                        Utils.zip(instanceInstaller.getTempActionsDirectory(), new File(instanceInstaller
+                                .getJarModsDirectory(), saveAs));
                         instanceInstaller.addToJarOrder(this.saveAs);
                         break;
                     default:

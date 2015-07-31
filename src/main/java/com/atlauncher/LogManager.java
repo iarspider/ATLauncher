@@ -28,16 +28,12 @@ import java.util.concurrent.BlockingQueue;
 
 public final class LogManager {
     private static final BlockingQueue<LogEvent> queue = new ArrayBlockingQueue<LogEvent>(128);
-
     public static boolean showDebug = false;
 
     /**
      * The level of debug logs to show. 1 being lowest, 2 being meh, 3 being EXTREEEEEEEME
      */
     public static int debugLevel = 0;
-
-    private LogManager() {
-    }
 
     public static void start() {
         new LoggingThread(queue).start();
@@ -48,7 +44,7 @@ public final class LogManager {
     }
 
     public static void info(String message) {
-        queue.offer(new LogEvent(LogEvent.LogType.INFO, message));
+        queue.offer(new LogEvent(LogType.INFO, message));
     }
 
     public static void debug(String message) {
@@ -57,13 +53,13 @@ public final class LogManager {
 
     public static void debug(String message, boolean force) {
         if (showDebug || force) {
-            queue.offer(new LogEvent(LogEvent.LogType.DEBUG, message));
+            queue.offer(new LogEvent(LogType.DEBUG, message));
         }
     }
 
     public static void debug(String message, int level) {
-        if (showDebug || debugLevel >= level) {
-            queue.offer(new LogEvent(LogEvent.LogType.DEBUG, message));
+        if (showDebug && debugLevel >= level) {
+            queue.offer(new LogEvent(LogType.DEBUG, message));
         }
     }
 
@@ -72,7 +68,7 @@ public final class LogManager {
     }
 
     public static void error(String message) {
-        queue.offer(new LogEvent(LogEvent.LogType.ERROR, message));
+        queue.offer(new LogEvent(LogType.ERROR, message));
     }
 
     public static void minecraft(String message) {

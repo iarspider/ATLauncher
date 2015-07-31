@@ -20,21 +20,16 @@ package com.atlauncher.data;
 import com.atlauncher.App;
 import com.atlauncher.Gsons;
 import com.atlauncher.LogManager;
-import com.atlauncher.data.mojang.auth.AuthenticationResponse;
 import com.atlauncher.data.openmods.OpenEyeReportResponse;
 import com.atlauncher.gui.dialogs.ProgressDialog;
 import com.atlauncher.mclauncher.LegacyMCLauncher;
 import com.atlauncher.mclauncher.MCLauncher;
-import com.atlauncher.utils.Authentication;
+import com.atlauncher.utils.HTMLUtils;
 import com.atlauncher.utils.Utils;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -67,6 +62,11 @@ public class Instance implements Cloneable {
      * The username of the user who installed this if it's set to be for that user only.
      */
     private String installedBy;
+
+    /**
+     * The UUID of the user who installed this if it's set to be for that user only.
+     */
+    private String userLock;
 
     /**
      * The version installed for this Instance.
@@ -177,7 +177,7 @@ public class Instance implements Cloneable {
      * @param name               the name of the Instance
      * @param pack               the name of the Pack this Instance is of
      * @param realPack           the Pack object for the Pack this Instance is of
-     * @param installJustForMe   if this instance is only meant to be used by the original installer
+     * @param enableUserLock     if this instance is only meant to be used by the original installer
      * @param version            the version of the Pack this Instance is of
      * @param minecraftVersion   the Minecraft version this Instance runs off
      * @param memory             the minimum RAM/memory as recommended by the pack developer/s
@@ -193,10 +193,10 @@ public class Instance implements Cloneable {
      * @param isPlayable         if this instance is playable
      * @param newLaunchMethod    if this instance is using the new launch method for Minecraft
      */
-    public Instance(String name, String pack, Pack realPack, boolean installJustForMe, String version, String
+    public Instance(String name, String pack, Pack realPack, boolean enableUserLock, String version, String
             minecraftVersion, int memory, int permgen, List<DisableableMod> mods, String jarOrder, String
-            librariesNeeded, String extraArguments, String minecraftArguments, String mainClass, String assets,
-                    boolean isDev, boolean isPlayable, boolean newLaunchMethod) {
+                            librariesNeeded, String extraArguments, String minecraftArguments, String mainClass,
+                    String assets, boolean isDev, boolean isPlayable, boolean newLaunchMethod) {
         this.name = name;
         this.pack = pack;
         this.realPack = realPack;
@@ -215,10 +215,10 @@ public class Instance implements Cloneable {
         this.isDev = isDev;
         this.isPlayable = isPlayable;
         this.newLaunchMethod = newLaunchMethod;
-        if (installJustForMe) {
-            this.installedBy = App.settings.getAccount().getMinecraftUsername();
+        if (enableUserLock && !App.settings.getAccount().isUUIDNull()) {
+            this.userLock = App.settings.getAccount().getUUIDNoDashes();
         } else {
-            this.installedBy = null;
+            this.userLock = null;
         }
         this.isConverted = true;
     }
@@ -229,7 +229,7 @@ public class Instance implements Cloneable {
      * @param name               the name of the Instance
      * @param pack               the name of the Pack this Instance is of
      * @param realPack           the Pack object for the Pack this Instance is of
-     * @param installJustForMe   if this instance is only meant to be used by the original installer
+     * @param enableUserLock     if this instance is only meant to be used by the original installer
      * @param version            the version of the Pack this Instance is of
      * @param minecraftVersion   the Minecraft version this Instance runs off
      * @param memory             the minimum RAM/memory as recommended by the pack developer/s
@@ -244,11 +244,11 @@ public class Instance implements Cloneable {
      * @param isDev              if this Instance is using a dev version of the pack
      * @param newLaunchMethod    if this instance is using the new launch method for Minecraft
      */
-    public Instance(String name, String pack, Pack realPack, boolean installJustForMe, String version, String
+    public Instance(String name, String pack, Pack realPack, boolean enableUserLock, String version, String
             minecraftVersion, int memory, int permgen, List<DisableableMod> mods, String jarOrder, String
-            librariesNeeded, String extraArguments, String minecraftArguments, String mainClass, String assets,
-                    boolean isDev, boolean newLaunchMethod) {
-        this(name, pack, realPack, installJustForMe, version, minecraftVersion, memory, permgen, mods, jarOrder,
+                            librariesNeeded, String extraArguments, String minecraftArguments, String mainClass,
+                    String assets, boolean isDev, boolean newLaunchMethod) {
+        this(name, pack, realPack, enableUserLock, version, minecraftVersion, memory, permgen, mods, jarOrder,
                 librariesNeeded, extraArguments, minecraftArguments, mainClass, assets, isDev, true, newLaunchMethod);
     }
 
@@ -462,7 +462,15 @@ public class Instance implements Cloneable {
         if (this.ignoredUpdates == null) {
             this.ignoredUpdates = new ArrayList<String>();
         }
-        String version = getLatestVersion();
+
+        String version;
+
+        if (this.isDev) {
+            version = getLatestDevHash();
+        } else {
+            version = getLatestVersion();
+        }
+
         if (!hasUpdateBeenIgnored(version)) {
             this.ignoredUpdates.add(version);
             App.settings.saveInstances();
@@ -943,13 +951,33 @@ public class Instance implements Cloneable {
         }
 
         // Check to see if this was a private Instance belonging to a specific user only.
-        if (this.installedBy != null && !App.settings.getAccount().getMinecraftUsername().equalsIgnoreCase(this
-                .installedBy)) {
+        if (this.userLock != null && !App.settings.getAccount().getUUIDNoDashes().equalsIgnoreCase(this
+                .userLock)) {
             return false;
         }
 
         // All good, no false returns yet so allow it.
         return true;
+    }
+
+    public String getInstalledBy() {
+        return this.installedBy;
+    }
+
+    public void removeInstalledBy() {
+        this.installedBy = null;
+    }
+
+    public String getUserLock() {
+        return this.userLock;
+    }
+
+    public void removeUserLock() {
+        this.userLock = null;
+    }
+
+    public void setUserLock(String lock) {
+        this.userLock = lock;
     }
 
     /**
@@ -991,7 +1019,13 @@ public class Instance implements Cloneable {
      * there is no versions of the Pack
      */
     public String getLatestVersion() {
-        return (this.realPack != null ? this.realPack.getLatestVersion().getVersion() : null);
+        return (this.realPack != null ? (this.realPack.getLatestVersion() == null ? null : this.realPack
+                .getLatestVersion().getVersion()) : null);
+    }
+
+    public String getLatestDevHash() {
+        return (this.realPack != null ? (this.realPack.getLatestDevVersion() == null ? null : this.realPack
+                .getLatestDevVersion().getHash()) : null);
     }
 
     /**
@@ -1037,11 +1071,10 @@ public class Instance implements Cloneable {
         } else {
             if ((App.settings.getMaximumMemory() < this.memory) && (this.memory <= Utils.getSafeMaximumRam())) {
                 String[] options = {Language.INSTANCE.localize("common.yes"), Language.INSTANCE.localize("common.no")};
-                int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">" +
-                        Language.INSTANCE.localizeWithReplace("instance" + "" +
-                                ".insufficientram", "<b>" + this.memory + "</b> MB<br/><br/>") +
-                        "</p></html>", Language.INSTANCE.localize("instance.insufficientramtitle"), JOptionPane
-                        .DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+                int ret = JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language
+                                .INSTANCE.localizeWithReplace("instance.insufficientram", "<b>" + this.memory + "</b> " +
+                                        "MB<br/><br/>")), Language.INSTANCE.localize("instance.insufficientramtitle"),
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
                 if (ret != 0) {
                     LogManager.warn("Launching of instance cancelled due to user cancelling memory warning!");
                     App.settings.setMinecraftLaunched(false);
@@ -1050,80 +1083,35 @@ public class Instance implements Cloneable {
             }
             if (App.settings.getPermGen() < this.permgen) {
                 String[] options = {Language.INSTANCE.localize("common.yes"), Language.INSTANCE.localize("common.no")};
-                int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">" +
-                        Language.INSTANCE.localizeWithReplace("instance" + "" +
-                                ".insufficientpermgen", "<b>" + this.permgen + "</b> MB<br/><br/>") +
-                        "</p></html>", Language.INSTANCE.localize("instance.insufficientpermgentitle"), JOptionPane
-                        .DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+                int ret = JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language
+                                .INSTANCE.localizeWithReplace("instance.insufficientpermgen", "<b>" + this.permgen + "</b> " +
+                                        "MB<br/><br/>")), Language.INSTANCE.localize("instance.insufficientpermgentitle"),
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
                 if (ret != 0) {
                     LogManager.warn("Launching of instance cancelled due to user cancelling permgen warning!");
                     App.settings.setMinecraftLaunched(false);
                     return false;
                 }
             }
-            AuthenticationResponse sess = null;
-            if (account.hasAccessToken() && account.isAccessTokenValid()) {
-                LogManager.info("Access token checked and is valid!");
-                sess = account.refreshToken();
-            } else {
-                if (account.hasAccessToken()) {
-                    LogManager.error("Access token checked and is NOT valid! Will attempt to get another one!");
-                    account.setAccessToken(null);
-                    App.settings.saveAccounts();
+
+
+            LogManager.info("Logging into Minecraft!");
+            final ProgressDialog dialog = new ProgressDialog(Language.INSTANCE.localize("account.loggingin"), 0,
+                    Language.INSTANCE.localize("account.loggingin"), "Aborted login to Minecraft!");
+            dialog.addThread(new Thread() {
+                public void run() {
+                    dialog.setReturnValue(account.login());
+                    dialog.close();
                 }
-                String password = account.getPassword();
-                if (!account.isRemembered()) {
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BorderLayout());
-                    JLabel passwordLabel = new JLabel(Language.INSTANCE.localizeWithReplace("instance.enterpassword",
-                            account.getMinecraftUsername()));
-                    JPasswordField passwordField = new JPasswordField();
-                    panel.add(passwordLabel, BorderLayout.NORTH);
-                    panel.add(passwordField, BorderLayout.CENTER);
-                    int ret = JOptionPane.showConfirmDialog(App.settings.getParent(), panel, Language.INSTANCE
-                            .localize("instance.enterpasswordtitle"), JOptionPane.OK_CANCEL_OPTION);
-                    if (ret == JOptionPane.OK_OPTION) {
-                        password = new String(passwordField.getPassword());
-                    } else {
-                        LogManager.error("Aborting login for " + account.getMinecraftUsername());
-                        App.settings.setMinecraftLaunched(false);
-                        return false;
-                    }
-                }
-                LogManager.info("Logging into Minecraft!");
-                final String pass = password;
-                final ProgressDialog dialog = new ProgressDialog(Language.INSTANCE.localize("account.loggingin"), 0,
-                        Language.INSTANCE.localize("account.loggingin"), "Aborting login for " + account
-                        .getMinecraftUsername());
-                dialog.addThread(new Thread() {
-                    public void run() {
-                        dialog.setReturnValue(Authentication.checkAccount(account.getUsername(), pass, (account
-                                .hasAccessToken() ? account.getClientToken() : null)));
-                        dialog.close();
-                    }
-                });
-                dialog.start();
-                sess = (AuthenticationResponse) dialog.getReturnValue();
-            }
-            if (sess == null) {
-                sess = new AuthenticationResponse("token:0:0", false);
-            } else if (sess.hasError()) {
-                LogManager.error(sess.getErrorMessage());
-                String[] options = {Language.INSTANCE.localize("common.ok")};
-                JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">" + Language
-                        .INSTANCE.localizeWithReplace("instance.errorloggingin", "<br/><br/>" + sess.getErrorMessage
-                                ()) + "</p></html>", Language.INSTANCE.localize("instance.errorloggingintitle"),
-                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
-                App.settings.setMinecraftLaunched(false);
+            });
+            dialog.start();
+
+            final LoginResponse session = (LoginResponse) dialog.getReturnValue();
+
+            if (session == null) {
                 return false;
-            } else {
-                account.setAccessToken(sess.getAccessToken());
-                account.setClientToken(sess.getClientToken());
-                account.setUUID(sess.getSelectedProfile().getId());
-                App.settings.saveAccounts();
             }
 
-            final AuthenticationResponse session = sess;
             Thread launcher = new Thread() {
                 public void run() {
                     try {
@@ -1145,12 +1133,21 @@ public class Instance implements Cloneable {
                                 }
                             }
                         }
+
+                        LogManager.info("Launching pack " + getPackName() + " " + getVersion() + " for " +
+                                "Minecraft " + getMinecraftVersion());
+
                         Process process = null;
                         if (isNewLaunchMethod()) {
                             process = MCLauncher.launch(account, Instance.this, session);
                         } else {
                             process = LegacyMCLauncher.launch(account, Instance.this, session);
                         }
+
+                        if (!App.settings.keepLauncherOpen() && !App.settings.enableLogs()) {
+                            System.exit(0);
+                        }
+
                         App.settings.showKillMinecraft(process);
                         InputStream is = process.getInputStream();
                         InputStreamReader isr = new InputStreamReader(is);
@@ -1163,9 +1160,6 @@ public class Instance implements Cloneable {
                                 if (account.hasAccessToken()) {
                                     line = line.replace(account.getAccessToken(), "**ACCESSTOKEN**");
                                 }
-                                if (account.hasClientToken()) {
-                                    line = line.replace(account.getClientToken(), "**CLIENTTOKEN**");
-                                }
                                 if (account.hasUUID()) {
                                     line = line.replace(account.getUUID(), "**UUID**");
                                 }
@@ -1177,20 +1171,17 @@ public class Instance implements Cloneable {
                             App.settings.getParent().setVisible(true);
                         }
                         long end = System.currentTimeMillis();
-                        if (App.settings.isInOfflineMode()) {
+                        if (App.settings.isInOfflineMode() && !App.forceOfflineMode) {
                             App.settings.checkOnlineStatus();
                         }
                         int exitValue = 0; // Assume we exited fine
                         try {
                             exitValue = process.exitValue(); // Try to get the real exit value
                         } catch (IllegalThreadStateException e) {
-                            App.settings.logStackTrace(e);
                             process.destroy(); // Kill the process
                         }
                         if (!App.settings.keepLauncherOpen()) {
-                            App.settings.getConsole().setVisible(false); // Hide the console to
-                            // pretend
-                            // we've closed
+                            App.settings.getConsole().setVisible(false); // Hide the console to pretend we've closed
                         }
                         if (exitValue != 0) {
                             // Submit any pending crash reports from Open Eye if need to since we
@@ -1249,7 +1240,7 @@ public class Instance implements Cloneable {
                             }
                         }
                         if (!App.settings.keepLauncherOpen()) {
-                            System.exit(1);
+                            System.exit(0);
                         }
                     } catch (IOException e1) {
                         App.settings.logStackTrace(e1);
@@ -1259,6 +1250,7 @@ public class Instance implements Cloneable {
             launcher.start();
             return true;
         }
+
     }
 
     /**
@@ -1282,12 +1274,11 @@ public class Instance implements Cloneable {
                     if (response.hasNote()) {
                         String[] options = {Language.INSTANCE.localize("common.opencrashreport"), Language.INSTANCE
                                 .localize("common.ok")};
-                        int ret = JOptionPane.showOptionDialog(App.settings.getParent(), "<html><p align=\"center\">"
-                                + Language.INSTANCE.localizeWithReplace("instance" + "" +
-                                ".openeyereport1", "<br/><br/>") + response.getNoteDisplay() + Language.INSTANCE
-                                .localize("instance.openeyereport2") + "</p></html>", Language.INSTANCE.localize
-                                ("instance.aboutyourcrash"), JOptionPane.DEFAULT_OPTION, JOptionPane
-                                .INFORMATION_MESSAGE, null, options, options[1]);
+                        int ret = JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph
+                                        (Language.INSTANCE.localizeWithReplace("instance.openeyereport1", "<br/><br/>") +
+                                                response.getNoteDisplay() + Language.INSTANCE.localize("instance" +
+                                                ".openeyereport2")), Language.INSTANCE.localize("instance.aboutyourcrash"),
+                                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[1]);
                         if (ret == 0) {
                             Utils.openBrowser(response.getURL());
                         }
@@ -1378,5 +1369,35 @@ public class Instance implements Cloneable {
         } catch (IOException e) {
             e.printStackTrace(System.err);
         }
+    }
+
+    public ArrayList<String> getInstalledOptionalModNames() {
+        ArrayList<String> installedOptionalMods = new ArrayList<String>();
+
+        for (DisableableMod mod : this.getInstalledMods()) {
+            if (mod.isOptional() && !mod.isUserAdded()) {
+                installedOptionalMods.add(mod.getName());
+            }
+        }
+
+        return installedOptionalMods;
+    }
+
+    public Map<String, Object> getShareCodeData() {
+        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> mods = new HashMap<String, Object>();
+        List<Map<String, Object>> optional = new ArrayList<Map<String, Object>>();
+
+        for (String mod : this.getInstalledOptionalModNames()) {
+            Map<String, Object> modInfo = new HashMap<String, Object>();
+            modInfo.put("name", mod);
+            modInfo.put("selected", true);
+            optional.add(modInfo);
+        }
+
+        mods.put("optional", optional);
+        data.put("mods", mods);
+
+        return data;
     }
 }

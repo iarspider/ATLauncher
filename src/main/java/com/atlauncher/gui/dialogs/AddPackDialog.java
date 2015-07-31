@@ -49,7 +49,7 @@ public class AddPackDialog extends JDialog {
 
     public AddPackDialog() {
         super(null, Language.INSTANCE.localize("pack.addpack"), ModalityType.APPLICATION_MODAL);
-        setSize(300, 150);
+        setSize(350, 150);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         setIconImage(Utils.getImage("/assets/image/Icon.png"));
@@ -89,8 +89,8 @@ public class AddPackDialog extends JDialog {
                                 JOptionPane.INFORMATION_MESSAGE);
                     } else {
                         JOptionPane.showMessageDialog(AddPackDialog.this, Language.INSTANCE.localize("pack" + "" +
-                                ".packalreadyaddedmessage"), Language.INSTANCE.localize("pack.packalreadyadded"),
-                                JOptionPane.ERROR_MESSAGE);
+                                        ".packalreadyaddedmessage"), Language.INSTANCE.localize("pack" +
+                                ".packalreadyadded"), JOptionPane.ERROR_MESSAGE);
                     }
                     setVisible(false);
                     dispose();

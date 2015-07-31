@@ -22,9 +22,13 @@ public final class ExceptionStrainer implements Thread.UncaughtExceptionHandler 
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         e.printStackTrace();
-        LogManager.error(e.getMessage());
+
+        if (e.getMessage() != null && !e.getMessage().isEmpty()) {
+            LogManager.error(e.getMessage());
+        }
+
         for (StackTraceElement element : e.getStackTrace()) {
-            if (element.toString() != null) {
+            if (element != null) {
                 LogManager.error(element.toString());
             }
         }

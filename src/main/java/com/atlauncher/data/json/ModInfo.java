@@ -15,29 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.atlauncher.data.mojang.auth;
+package com.atlauncher.data.json;
 
-public class GameProfile {
+import com.atlauncher.annot.Json;
 
-    private final String id;
-    private final String name;
-    private boolean legacy;
+@Json
+public class ModInfo {
+    private int filesize;
+    private String md5;
 
-    public GameProfile(String id, String name) {
-        this.id = id;
-        this.name = name;
+    public int getFilesize() {
+        return filesize;
     }
 
-    public String getId() {
-        return this.id;
+    public String getMd5() {
+        return md5;
     }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public boolean isLegacy() {
-        return this.legacy;
-    }
-
 }

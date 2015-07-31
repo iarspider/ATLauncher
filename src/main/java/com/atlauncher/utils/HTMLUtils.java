@@ -15,15 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package com.atlauncher.data.mojang.auth;
+package com.atlauncher.utils;
 
-public class InvalidateRequest {
-
-    private String accessToken;
-    private String clientToken;
-
-    public InvalidateRequest(String accessToken, String clientToken) {
-        this.accessToken = accessToken;
-        this.clientToken = clientToken;
+/**
+ * Creates some basic helpers for HTML displays on things.
+ */
+public class HTMLUtils {
+    /**
+     * Creates a basic centered paragraph.
+     *
+     * @param text the text to be centered in a paragraph
+     * @return the HTML for the text that's been centered and paragraphed
+     */
+    public static String centerParagraph(String text) {
+        return "<html><p align=\"center\">" + text + "</p></html>";
     }
 }

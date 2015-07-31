@@ -31,6 +31,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 public class Downloadable {
@@ -46,11 +48,21 @@ public class Downloadable {
     private File copyTo;
     private boolean actuallyCopy;
     private int attempts = 0;
+    private List<Server> servers;
+    private Server server;
 
-    public Downloadable(String url, File file, String hash, int size, InstanceInstaller instanceInstaller,
-                        boolean isATLauncherDownload, File copyTo, boolean actuallyCopy) {
+    public Downloadable(String url, File file, String hash, int size, InstanceInstaller instanceInstaller, boolean
+            isATLauncherDownload, File copyTo, boolean actuallyCopy) {
         if (isATLauncherDownload) {
-            this.url = App.settings.getFileURL(url);
+            this.servers = new ArrayList<Server>(App.settings.getServers());
+            this.server = this.servers.get(0);
+            for (Server server : this.servers) {
+                if (server.getName().equals(App.settings.getServer().getName())) {
+                    this.server = server;
+                    break;
+                }
+            }
+            this.url = this.server.getFileURL(url);
         } else {
             this.url = url;
         }
@@ -64,13 +76,13 @@ public class Downloadable {
         this.actuallyCopy = actuallyCopy;
     }
 
-    public Downloadable(String url, File file, String hash, int size, InstanceInstaller instanceInstaller,
-                        boolean isATLauncherDownload) {
+    public Downloadable(String url, File file, String hash, int size, InstanceInstaller instanceInstaller, boolean
+            isATLauncherDownload) {
         this(url, file, hash, size, instanceInstaller, isATLauncherDownload, null, false);
     }
 
-    public Downloadable(String url, File file, String hash, InstanceInstaller instanceInstaller,
-                        boolean isATLauncherDownload) {
+    public Downloadable(String url, File file, String hash, InstanceInstaller instanceInstaller, boolean
+            isATLauncherDownload) {
         this(url, file, hash, -1, instanceInstaller, isATLauncherDownload, null, false);
     }
 
@@ -98,7 +110,7 @@ public class Downloadable {
         etag = getConnection().getHeaderField("ETag");
 
         if (etag == null) {
-            etag = getConnection().getHeaderField("ATLauncher-MD5");
+            etag = getConnection().getHeaderField(Constants.LAUNCHER_NAME + "-MD5");
         }
 
         if (etag == null) {
@@ -223,12 +235,12 @@ public class Downloadable {
                 LogManager.debug("Exception when opening connection to " + this.url, 3);
                 App.settings.logStackTrace(e);
                 if (this.isATLauncherDownload) {
-                    if (App.settings.getNextServer()) {
-                        this.url = App.settings.getFileURL(this.beforeURL);
+                    if (getNextServer()) {
+                        this.url = server.getFileURL(this.beforeURL);
                         this.connection = null;
                         return getConnection();
                     } else {
-                        LogManager.error("Failed to download " + this.beforeURL + " from all ATLauncher servers. " +
+                        LogManager.error("Failed to download " + this.beforeURL + " from all " + Constants.LAUNCHER_NAME + " servers. " +
                                 "Cancelling install!");
                         if (this.instanceInstaller != null) {
                             instanceInstaller.cancel(true);
@@ -384,19 +396,25 @@ public class Downloadable {
                 if (this.file.exists()) {
                     Utils.delete(this.file); // Delete file since it doesn't match MD5
                 }
+                if (attempts != 1 && downloadAsLibrary) {
+                    this.instanceInstaller.addTotalDownloadedBytes(this.size);
+                }
                 downloadFile(downloadAsLibrary); // Keep downloading file until it matches MD5
             }
             if (!done) {
                 if (this.isATLauncherDownload) {
-                    if (App.settings.getNextServer()) {
+                    if (getNextServer()) {
                         LogManager.warn("Error downloading " + this.file.getName() + " from " + this.url + ". " +
                                 "Expected hash of " + getHash() + " but got " + fileHash + " instead. Trying another " +
                                 "server!");
-                        this.url = App.settings.getFileURL(this.beforeURL);
+                        this.url = server.getFileURL(this.beforeURL);
+                        if (downloadAsLibrary) {
+                            this.instanceInstaller.addTotalDownloadedBytes(this.size);
+                        }
                         download(downloadAsLibrary); // Redownload the file
                     } else {
                         Utils.copyFile(this.file, App.settings.getFailedDownloadsDir());
-                        LogManager.error("Failed to download file " + this.file.getName() + " from all ATLauncher " +
+                        LogManager.error("Failed to download file " + this.file.getName() + " from all " + Constants.LAUNCHER_NAME +
                                 "servers. Copied to FailedDownloads Folder. Cancelling install!");
                         if (this.instanceInstaller != null) {
                             instanceInstaller.cancel(true);
@@ -441,6 +459,18 @@ public class Downloadable {
         if (this.connection != null) {
             this.connection.disconnect();
         }
+    }
+
+    public boolean getNextServer() {
+        for (Server server : this.servers) {
+            if (this.server != server) {
+                LogManager.warn("Server " + this.server.getName() + " Not Available! Switching To " + server.getName());
+                this.servers.remove(this.server);
+                this.server = server; // Setup next available server
+                return true;
+            }
+        }
+        return false;
     }
 
     public int getResponseCode() {

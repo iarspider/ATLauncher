@@ -18,9 +18,9 @@
 package com.atlauncher.utils;
 
 import com.atlauncher.App;
+import com.atlauncher.Gsons;
 import com.atlauncher.LogManager;
 import com.atlauncher.data.Constants;
-import com.atlauncher.data.Settings;
 import com.atlauncher.data.mojang.ExtractRule;
 import com.atlauncher.data.mojang.OperatingSystem;
 import com.atlauncher.data.openmods.OpenEyeReportResponse;
@@ -72,6 +72,7 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
@@ -119,14 +120,47 @@ public class Utils {
      * @return the icon image
      */
     public static ImageIcon getIconImage(String path) {
-        URL url = System.class.getResource(path);
+        try {
+            File themeFile = App.settings.getThemeFile();
 
-        if (url == null) {
-            LogManager.error("Unable to load resource " + path);
+            if (themeFile != null) {
+                InputStream stream = null;
+
+                ZipFile zipFile = new ZipFile(themeFile);
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    if (entry.getName().equals("image/" + path.substring(path.lastIndexOf('/') + 1))) {
+                        stream = zipFile.getInputStream(entry);
+                        break;
+                    }
+                }
+
+                if (stream != null) {
+                    BufferedImage image = ImageIO.read(stream);
+
+                    stream.close();
+                    zipFile.close();
+
+                    return new ImageIcon(image);
+                }
+
+                zipFile.close();
+            }
+
+            URL url = System.class.getResource(path);
+
+            if (url == null) {
+                LogManager.error("Unable to load resource " + path);
+                return null;
+            }
+
+            return new ImageIcon(url);
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
             return null;
         }
-
-        return new ImageIcon(url);
     }
 
     public static File getCoreGracefully() {
@@ -136,10 +170,21 @@ public class Utils {
                         .getSchemeSpecificPart()).getParentFile();
             } catch (URISyntaxException e) {
                 e.printStackTrace();
-                return new File(System.getProperty("user.dir"), "ATLauncher");
+                return new File(System.getProperty("user.dir"), Constants.LAUNCHER_NAME);
             }
         } else {
             return new File(System.getProperty("user.dir"));
+        }
+    }
+
+    public static File getOSStorageDir() {
+        switch (OperatingSystem.getOS()) {
+            case WINDOWS:
+                return new File(System.getenv("APPDATA"), "/." + Constants.LAUNCHER_NAME.toLowerCase());
+            case OSX:
+                return new File(System.getProperty("user.home"), "/Library/Application Support/." + Constants.LAUNCHER_NAME.toLowerCase());
+            default:
+                return new File(System.getProperty("user.home"), "/." + Constants.LAUNCHER_NAME.toLowerCase());
         }
     }
 
@@ -182,6 +227,34 @@ public class Utils {
 
             if (!name.endsWith(".png")) {
                 name = name + ".png";
+            }
+
+            File themeFile = App.settings.getThemeFile();
+
+            if (themeFile != null) {
+                InputStream stream = null;
+
+                ZipFile zipFile = new ZipFile(themeFile);
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    if (entry.getName().equals("image/" + name.substring(name.lastIndexOf('/') + 1))) {
+                        stream = zipFile.getInputStream(entry);
+                        break;
+                    }
+                }
+
+                if (stream != null) {
+                    BufferedImage image = ImageIO.read(stream);
+
+                    stream.close();
+                    zipFile.close();
+
+                    return image;
+                }
+
+                zipFile.close();
             }
 
             InputStream stream = App.class.getResourceAsStream(name);
@@ -870,14 +943,49 @@ public class Utils {
             return;
         }
         if (file.isDirectory()) {
-            for (File c : file.listFiles()) {
-                delete(c);
+            if (file.listFiles() != null) {
+                for (File c : file.listFiles()) {
+                    delete(c);
+                }
             }
         }
+
+        if (isSymlink(file)) {
+            LogManager.error("Not deleting the " + (file.isFile() ? "file" : "folder") + file.getAbsolutePath() +
+                    "as it's a symlink");
+            return;
+        }
+
         if (!file.delete()) {
             LogManager.error((file.isFile() ? "File" : "Folder") + " " + file.getAbsolutePath() + " couldn't be " +
                     "deleted");
         }
+    }
+
+    public static boolean isSymlink(File file) {
+        try {
+            if (file == null) {
+                throw new NullPointerException("File must not be null");
+            }
+
+            File canon;
+
+            if (file.getParent() == null) {
+                canon = file;
+            } else {
+                File canonDir = null;
+
+                canonDir = file.getParentFile().getCanonicalFile();
+
+                canon = new File(canonDir, file.getName());
+            }
+
+            return !canon.getCanonicalFile().equals(canon.getAbsoluteFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
     /**
@@ -909,8 +1017,8 @@ public class Utils {
                 spreadOutResourceFiles(file);
             } else {
                 String hash = getSHA1(file);
-                File saveTo = new File(App.settings.getObjectsAssetsDir(), hash.substring(0,
-                        2) + File.separator + hash);
+                File saveTo = new File(App.settings.getObjectsAssetsDir(), hash.substring(0, 2) + File.separator +
+                        hash);
                 saveTo.mkdirs();
                 copyFile(file, saveTo, true);
             }
@@ -1081,7 +1189,6 @@ public class Utils {
             byte[] decValue = c.doFinal(decordedValue);
             decryptedValue = new String(decValue);
         } catch (Exception e) {
-            App.settings.logStackTrace(e);
         }
         return decryptedValue;
     }
@@ -1105,8 +1212,8 @@ public class Utils {
      * @param withThis        the with this
      * @throws IOException Signals that an I/O exception has occurred.
      */
-    public static void replaceText(File originalFile, File destinationFile, String replaceThis,
-                                   String withThis) throws IOException {
+    public static void replaceText(File originalFile, File destinationFile, String replaceThis, String withThis)
+            throws IOException {
 
         FileInputStream fs = new FileInputStream(originalFile);
         BufferedReader br = new BufferedReader(new InputStreamReader(fs));
@@ -1176,10 +1283,10 @@ public class Utils {
     public static String sendAPICall(String path, Object data) throws IOException {
         StringBuilder response = null;
 
-        byte[] contents = Settings.gson.toJson(data).getBytes();
+        byte[] contents = Gsons.DEFAULT.toJson(data).getBytes();
 
         URL url = new URL(Constants.API_BASE_URL + path);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         connection.setRequestMethod("POST");
         connection.setRequestProperty("User-Agent", App.settings.getUserAgent());
@@ -1271,6 +1378,21 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    /**
+     * Gets the logs file filter.
+     *
+     * @return the logs file filter
+     */
+    public static FilenameFilter getLogsFileFilter() {
+        return new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                File file = new File(dir, name);
+                return file.isFile() && name.startsWith(Constants.LAUNCHER_NAME + "-Log_") && name.endsWith(".log");
+            }
+        };
     }
 
     /**
@@ -1434,6 +1556,45 @@ public class Utils {
     }
 
     /**
+     * Checks if is java9.
+     *
+     * @return true, if is java9
+     */
+    public static boolean isJava9() {
+        if (App.settings.isUsingCustomJavaPath()) {
+            File folder = new File(App.settings.getJavaPath(), "bin/");
+            List<String> arguments = new ArrayList<String>();
+            arguments.add(folder + File.separator + "java" + (Utils.isWindows() ? ".exe" : ""));
+            arguments.add("-version");
+            ProcessBuilder processBuilder = new ProcessBuilder(arguments);
+            processBuilder.directory(folder);
+            processBuilder.redirectErrorStream(true);
+            BufferedReader br = null;
+            try {
+                Process process = processBuilder.start();
+                InputStream is = process.getInputStream();
+                InputStreamReader isr = new InputStreamReader(is);
+                br = new BufferedReader(isr);
+                String line = br.readLine(); // Read first line only
+                return line.contains("\"1.9");
+            } catch (IOException e) {
+                App.settings.logStackTrace(e);
+            } finally {
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        App.settings.logStackTrace("Cannot close input stream reader", e);
+                    }
+                }
+            }
+            return false; // Can't determine version, so fall back to not being Java 8
+        } else {
+            return System.getProperty("java.version").substring(0, 3).equalsIgnoreCase("1.9");
+        }
+    }
+
+    /**
      * Gets the open eye pending reports file filter.
      *
      * @return the open eye pending reports file filter
@@ -1516,7 +1677,7 @@ public class Utils {
         }
 
         // Return an OpenEyeReportResponse object from the singular array returned in JSON
-        return Settings.gson.fromJson(response.toString(), OpenEyeReportResponse[].class)[0];
+        return Gsons.DEFAULT.fromJson(response.toString(), OpenEyeReportResponse[].class)[0];
     }
 
     /**
@@ -1618,7 +1779,7 @@ public class Utils {
             @Override
             public boolean accept(File dir, String name) {
                 File file = new File(dir, name);
-                return file.exists() && file.isFile() && name.endsWith(".json");
+                return file.exists() && file.isFile() && name.endsWith(".zip");
             }
         };
     }
@@ -1953,5 +2114,58 @@ public class Utils {
         }
 
         return getMD5(returnStr);
+    }
+
+    /**
+     * Credit to https://github.com/Slowpoke101/FTBLaunch/blob/master/src/main/java/net/ftb/workers/AuthlibDLWorker.java
+     */
+    public static boolean addToClasspath(File file) {
+        LogManager.info("Loading external library " + file.getName() + " to classpath");
+        try {
+            if (file.exists()) {
+                addURL(file.toURI().toURL());
+            } else {
+                LogManager.error("Error loading AuthLib");
+            }
+        } catch (Throwable t) {
+            if (t.getMessage() != null) {
+                LogManager.error(t.getMessage());
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean checkAuthLibLoaded() {
+        try {
+            App.settings.getClass().forName("com.mojang.authlib.exceptions.AuthenticationException");
+            App.settings.getClass().forName("com.mojang.authlib.Agent");
+            App.settings.getClass().forName("com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService");
+            App.settings.getClass().forName("com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication");
+        } catch (ClassNotFoundException e) {
+            App.settings.logStackTrace(e);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Credit to https://github.com/Slowpoke101/FTBLaunch/blob/master/src/main/java/net/ftb/workers/AuthlibDLWorker.java
+     */
+    public static void addURL(URL u) throws IOException {
+        URLClassLoader sysloader = (URLClassLoader) App.settings.getClass().getClassLoader();
+        Class sysclass = URLClassLoader.class;
+        try {
+            Method method = sysclass.getDeclaredMethod("addURL", URL.class);
+            method.setAccessible(true);
+            method.invoke(sysloader, u);
+        } catch (Throwable t) {
+            if (t.getMessage() != null) {
+                LogManager.error(t.getMessage());
+            }
+            throw new IOException("Error, could not add URL to system classloader");
+        }
     }
 }

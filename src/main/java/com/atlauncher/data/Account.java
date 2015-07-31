@@ -21,16 +21,24 @@ import com.atlauncher.App;
 import com.atlauncher.Gsons;
 import com.atlauncher.LogManager;
 import com.atlauncher.data.mojang.api.MinecraftProfileResponse;
-import com.atlauncher.data.mojang.auth.AuthenticationResponse;
+import com.atlauncher.data.mojang.api.ProfileTexture;
 import com.atlauncher.gui.dialogs.ProgressDialog;
 import com.atlauncher.gui.tabs.InstancesTab;
 import com.atlauncher.gui.tabs.PacksTab;
 import com.atlauncher.utils.Authentication;
+import com.atlauncher.utils.HTMLUtils;
+import com.atlauncher.utils.MojangAPIUtils;
 import com.atlauncher.utils.Utils;
+import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
+import com.mojang.util.UUIDTypeAdapter;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import java.awt.BorderLayout;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -45,6 +53,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -117,6 +126,11 @@ public class Account implements Serializable {
     private boolean skinUpdating = false;
 
     /**
+     * This is the store for this username as returned by Mojang.
+     */
+    private Map<String, Object> store;
+
+    /**
      * Constructor for a real user Account.
      *
      * @param username          The name of the Account
@@ -162,7 +176,8 @@ public class Account implements Serializable {
     public ImageIcon getMinecraftHead() {
         File file = null;
         if (this.isReal()) {
-            file = new File(App.settings.getSkinsDir(), this.minecraftUsername + ".png");
+            file = new File(App.settings.getSkinsDir(), (this.isUUIDNull() ? "default" : this.getUUIDNoDashes()) +
+                    ".png");
             if (!file.exists()) {
                 this.updateSkin(); // Download/update the users skin
             }
@@ -201,7 +216,7 @@ public class Account implements Serializable {
     public ImageIcon getMinecraftSkin() {
         File file = null;
         if (this.isReal()) {
-            file = new File(App.settings.getSkinsDir(), this.minecraftUsername + ".png");
+            file = new File(App.settings.getSkinsDir(), this.getUUIDNoDashes() + ".png");
             if (!file.exists()) {
                 this.updateSkin(); // Download/update the users skin
             }
@@ -298,6 +313,28 @@ public class Account implements Serializable {
         return (this.uuid == null ? "0" : this.uuid);
     }
 
+    public boolean isUUIDNull() {
+        return this.uuid == null;
+    }
+
+    /**
+     * Gets the UUID of this account with no dashes.
+     *
+     * @return The UUID for this Account with no dashes
+     */
+    public String getUUIDNoDashes() {
+        return (this.uuid == null ? "0" : this.uuid.replace("-", ""));
+    }
+
+    /**
+     * Gets the real UUID of this account.
+     *
+     * @return The real UUID for this Account
+     */
+    public UUID getRealUUID() {
+        return (this.uuid == null ? UUID.randomUUID() : UUIDTypeAdapter.fromString(this.uuid));
+    }
+
     /**
      * Sets the uuid for this Account.
      *
@@ -366,6 +403,11 @@ public class Account implements Serializable {
             this.remember = false;
         } else {
             this.password = Utils.decrypt(this.encryptedPassword);
+            if (this.password == null) {
+                LogManager.error("Error reading in saved password from file!");
+                this.password = "";
+                this.remember = false;
+            }
         }
         this.isReal = true;
     }
@@ -400,7 +442,7 @@ public class Account implements Serializable {
     public void updateSkin() {
         if (!this.skinUpdating) {
             this.skinUpdating = true;
-            final File file = new File(App.settings.getSkinsDir(), this.minecraftUsername + ".png");
+            final File file = new File(App.settings.getSkinsDir(), this.getUUIDNoDashes() + ".png");
             LogManager.info("Downloading skin for " + this.minecraftUsername);
             final ProgressDialog dialog = new ProgressDialog(Language.INSTANCE.localize("account" + "" +
                     ".downloadingskin"), 0, Language.INSTANCE.localizeWithReplace("account.downloadingminecraftskin",
@@ -410,6 +452,7 @@ public class Account implements Serializable {
                     dialog.setReturnValue(false);
                     String skinURL = getSkinURL();
                     if (skinURL == null) {
+                        LogManager.error("Couldn't download skin because the url found was NULL");
                         if (!file.exists()) {
                             // Only copy over the default skin if there is no skin for the user
                             Utils.copyFile(new File(App.settings.getSkinsDir(), "default.png"), file, true);
@@ -444,8 +487,8 @@ public class Account implements Serializable {
             if (!(Boolean) dialog.getReturnValue()) {
                 String[] options = {Language.INSTANCE.localize("common.ok")};
                 JOptionPane.showOptionDialog(App.settings.getParent(), Language.INSTANCE.localize("account" + "" +
-                                ".skinerror"), Language.INSTANCE.localize("common.error"),
-                        JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+                        ".skinerror"), Language.INSTANCE.localize("common.error"), JOptionPane
+                        .DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, options, options[0]);
             }
             this.skinUpdating = false;
         }
@@ -454,7 +497,7 @@ public class Account implements Serializable {
     public String getSkinURL() {
         StringBuilder response = null;
         try {
-            URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + this.getUUID());
+            URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + this.getUUIDNoDashes());
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
             connection.setConnectTimeout(15000);
@@ -493,7 +536,17 @@ public class Account implements Serializable {
 
         MinecraftProfileResponse profile = Gsons.DEFAULT.fromJson(response.toString(), MinecraftProfileResponse.class);
 
-        return profile.getUserProperty("textures").getTexture("SKIN").getUrl();
+        if (!profile.hasProperties()) {
+            return null;
+        }
+
+        ProfileTexture texture = profile.getUserProperty("textures").getTexture("SKIN");
+
+        if (texture == null) {
+            return null;
+        }
+
+        return texture.getUrl();
     }
 
     public String getAccessToken() {
@@ -506,39 +559,6 @@ public class Account implements Serializable {
 
     public boolean hasAccessToken() {
         return this.accessToken != null;
-    }
-
-    public boolean isAccessTokenValid() {
-        LogManager.info("Checking Access Token!");
-        final ProgressDialog dialog = new ProgressDialog(Language.INSTANCE.localize("account.checkingtoken"), 0,
-                Language.INSTANCE.localize("account.checkingtoken"), "Aborting access token check for " + this
-                .getMinecraftUsername());
-        dialog.addThread(new Thread() {
-            public void run() {
-                dialog.setReturnValue(Authentication.checkAccessToken(accessToken));
-                dialog.close();
-            }
-        });
-        dialog.start();
-        if ((Boolean) dialog.getReturnValue() == null) {
-            return false;
-        }
-        return (Boolean) dialog.getReturnValue();
-    }
-
-    public AuthenticationResponse refreshToken() {
-        LogManager.info("Refreshing Access Token!");
-        final ProgressDialog dialog = new ProgressDialog(Language.INSTANCE.localize("account.refreshingtoken"),
-                0, Language.INSTANCE.localize("account.refreshingtoken"), "Aborting token refresh for " + this
-                .getMinecraftUsername());
-        dialog.addThread(new Thread() {
-            public void run() {
-                dialog.setReturnValue(Authentication.refreshAccessToken(Account.this));
-                dialog.close();
-            }
-        });
-        dialog.start();
-        return (AuthenticationResponse) dialog.getReturnValue();
     }
 
     public String getClientToken() {
@@ -558,7 +578,115 @@ public class Account implements Serializable {
         return this.minecraftUsername;
     }
 
-    public String getSession() {
-        return "token:" + this.getAccessToken() + ":" + this.getUUID();
+    public String getSession(LoginResponse response) {
+        if (!response.isOffline() && response != null && response.getAuth().isLoggedIn() && response.getAuth()
+                .canPlayOnline()) {
+            if (response.getAuth() instanceof YggdrasilUserAuthentication) {
+                return String.format("token:%s:%s", response.getAuth().getAuthenticatedToken(), UUIDTypeAdapter
+                        .fromUUID(response.getAuth().getSelectedProfile().getId()));
+            } else {
+                return response.getAuth().getAuthenticatedToken();
+            }
+        }
+        return "token:0:0";
+    }
+
+    public boolean hasStore() {
+        return this.store != null;
+    }
+
+    public Map<String, Object> getStore() {
+        return this.store;
+    }
+
+    public void saveStore(Map<String, Object> store) {
+        this.store = store;
+        App.settings.saveAccounts();
+    }
+
+    // TODO: Change to use Mojang authlib
+    public LoginResponse login() {
+        LoginResponse response = null;
+
+        if (this.hasAccessToken() && this.hasStore()) {
+            LogManager.info("Trying to login with access token!");
+            response = Authentication.login(this);
+        }
+
+        if (response == null || response.hasError()) {
+            if (this.hasAccessToken()) {
+                LogManager.error("Access token is NOT valid! Will attempt to get another one!");
+                this.setAccessToken(null);
+                App.settings.saveAccounts();
+            }
+
+            if (!this.isRemembered()) {
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout());
+                JLabel passwordLabel = new JLabel(Language.INSTANCE.localizeWithReplace("instance.enterpassword",
+                        this.getMinecraftUsername()));
+
+                JPasswordField passwordField = new JPasswordField();
+                panel.add(passwordLabel, BorderLayout.NORTH);
+                panel.add(passwordField, BorderLayout.CENTER);
+                int ret = JOptionPane.showConfirmDialog(App.settings.getParent(), panel, Language.INSTANCE.localize
+                        ("instance.enterpasswordtitle"), JOptionPane.OK_CANCEL_OPTION);
+                if (ret == JOptionPane.OK_OPTION) {
+                    this.setPassword(new String(passwordField.getPassword()));
+                } else {
+                    LogManager.error("Aborting login for " + this.getMinecraftUsername());
+                    App.settings.setMinecraftLaunched(false);
+                    return null;
+                }
+            }
+
+            response = Authentication.login(Account.this, true);
+        }
+
+        if (response.hasError() && !response.isOffline()) {
+            LogManager.error(response.getErrorMessage());
+            String[] options = {Language.INSTANCE.localize("common.ok")};
+            JOptionPane.showOptionDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language.INSTANCE
+                            .localizeWithReplace("instance.errorloggingin", "<br/><br/>" + response.getErrorMessage())),
+                    Language.INSTANCE.localize("instance" + ".errorloggingintitle"), JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.ERROR_MESSAGE, null, options, options[0]);
+            App.settings.setMinecraftLaunched(false);
+            return null;
+        }
+
+        if (!response.isOffline() && !response.getAuth().canPlayOnline()) {
+            return null;
+        }
+
+        if (!response.isOffline()) {
+            this.setAccessToken(response.getAuth().getAuthenticatedToken());
+            this.setUUID(response.getAuth().getSelectedProfile().getId().toString());
+            response.save();
+            App.settings.saveAccounts();
+        }
+
+        return response;
+    }
+
+    public boolean checkForUsernameChange() {
+        if (this.uuid == null) {
+            LogManager.error("The account " + this.minecraftUsername + " has no UUID associated with it !");
+            return false;
+        }
+
+        String currentUsername = MojangAPIUtils.getCurrentUsername(this.getUUIDNoDashes());
+
+        if (currentUsername == null) {
+            return false;
+        }
+
+        if (!currentUsername.equals(this.minecraftUsername)) {
+            LogManager.info("The username for account with UUID of " + this.getUUIDNoDashes() + " changed from " +
+                    this.minecraftUsername + " to " + currentUsername);
+            this.minecraftUsername = currentUsername;
+            return true;
+        }
+
+        return false;
     }
 }

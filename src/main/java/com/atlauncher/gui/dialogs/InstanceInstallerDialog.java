@@ -22,6 +22,7 @@ import com.atlauncher.data.Instance;
 import com.atlauncher.data.Language;
 import com.atlauncher.data.Pack;
 import com.atlauncher.data.PackVersion;
+import com.atlauncher.utils.HTMLUtils;
 import com.atlauncher.utils.Utils;
 import com.atlauncher.workers.InstanceInstaller;
 
@@ -67,19 +68,31 @@ public class InstanceInstallerDialog extends JDialog {
     private JLabel versionLabel;
     private JComboBox<PackVersion> versionsDropDown;
     private ArrayList<PackVersion> versions = new ArrayList<PackVersion>();
-    private JLabel installForLabel;
-    private JCheckBox installForMe;
+    private JLabel enableUserLockLabel;
+    private JCheckBox enableUserLock;
+
+    private PackVersion autoInstallVersion;
+    private String shareCode;
 
     public InstanceInstallerDialog(Object object) {
-        this(object, false, false);
+        this(object, false, false, null, null, true);
+    }
+
+    public InstanceInstallerDialog(Pack pack, PackVersion version, String shareCode, boolean showModsChooser) {
+        this(pack, false, false, version, shareCode, showModsChooser);
     }
 
     public InstanceInstallerDialog(Pack pack, boolean isServer) {
-        this((Object) pack, false, true);
+        this((Object) pack, false, true, null, null, true);
     }
 
-    public InstanceInstallerDialog(Object object, final boolean isUpdate, final boolean isServer) {
+    public InstanceInstallerDialog(Object object, final boolean isUpdate, final boolean isServer, final PackVersion
+            autoInstallVersion, final String shareCode, final boolean showModsChooser) {
         super(App.settings.getParent(), ModalityType.APPLICATION_MODAL);
+
+        this.autoInstallVersion = autoInstallVersion;
+        this.shareCode = shareCode;
+
         if (object instanceof Pack) {
             pack = (Pack) object;
             setTitle(Language.INSTANCE.localize("common.installing") + " " + pack.getName());
@@ -175,18 +188,41 @@ public class InstanceInstallerDialog extends JDialog {
         versionsDropDown.setPreferredSize(new Dimension(200, 25));
         middle.add(versionsDropDown, gbc);
 
+        if (autoInstallVersion != null) {
+            versionsDropDown.setSelectedItem(autoInstallVersion);
+            versionsDropDown.setEnabled(false);
+        }
+
         if (!this.isServer) {
             if (!isReinstall) {
                 gbc.gridx = 0;
                 gbc.gridy++;
                 gbc.anchor = GridBagConstraints.BASELINE_TRAILING;
-                installForLabel = new JLabel(Language.INSTANCE.localize("instance.installjustforme") + "? ");
-                middle.add(installForLabel, gbc);
+                enableUserLockLabel = new JLabel(Language.INSTANCE.localize("instance.enableuserlock") + "? ");
+                middle.add(enableUserLockLabel, gbc);
 
                 gbc.gridx++;
                 gbc.anchor = GridBagConstraints.BASELINE_LEADING;
-                installForMe = new JCheckBox();
-                middle.add(installForMe, gbc);
+                enableUserLock = new JCheckBox();
+                enableUserLock.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        if (enableUserLock.isSelected()) {
+                            String[] options = {Language.INSTANCE.localize("common.yes"),
+                                    Language.INSTANCE.localize("common.no")};
+
+                            int ret = JOptionPane.showOptionDialog(null, HTMLUtils.centerParagraph(Language.INSTANCE
+                                    .localizeWithReplace("instance.userlockhelp", "<br/>")), Language.INSTANCE
+                                    .localize("instance.userlocktitle"), JOptionPane.DEFAULT_OPTION, JOptionPane
+                                    .WARNING_MESSAGE, null, options, options[0]);
+
+                            if (ret != 0) {
+                                enableUserLock.setSelected(false);
+                            }
+                        }
+                    }
+                });
+                middle.add(enableUserLock, gbc);
             }
         }
 
@@ -200,12 +236,11 @@ public class InstanceInstallerDialog extends JDialog {
                 if (!isReinstall && !isServer && App.settings.isInstance(instanceNameField.getText())) {
                     instance = App.settings.getInstanceByName(instanceNameField.getText());
                     if (instance.getPackName().equalsIgnoreCase(pack.getName())) {
-                        int ret = JOptionPane.showConfirmDialog(App.settings.getParent(),
-                                "<html><p align=\"center\">" + Language.INSTANCE.localize("common.error") +
+                        int ret = JOptionPane.showConfirmDialog(App.settings.getParent(), HTMLUtils.centerParagraph
+                                (Language.INSTANCE.localize("common.error") +
                                         "<br/><br/>" + Language.INSTANCE.localizeWithReplace("instance" + "" +
-                                        ".alreadyinstance1", instanceNameField.getText() + "<br/><br/>") +
-                                        "</p></html>", Language.INSTANCE.localize("common.error"),
-                                JOptionPane.ERROR_MESSAGE);
+                                        ".alreadyinstance1", instanceNameField.getText() + "<br/><br/>")), Language.INSTANCE
+                                .localize("common.error"), JOptionPane.YES_NO_OPTION);
                         if (ret != JOptionPane.YES_OPTION) {
                             return;
                         }
@@ -214,21 +249,19 @@ public class InstanceInstallerDialog extends JDialog {
                             return;
                         }
                     } else {
-                        JOptionPane.showMessageDialog(App.settings.getParent(),
-                                "<html><p align=\"center\">" + Language.INSTANCE.localize("common.error") +
-                                        "<br/><br/>" + Language.INSTANCE.localizeWithReplace("instance" + "" +
-                                        ".alreadyinstance", instanceNameField.getText() + "<br/><br/>") +
-                                        "</p></html>", Language.INSTANCE.localize("common.error"),
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language
+                                .INSTANCE.localize("common.error") +
+                                "<br/><br/>" + Language.INSTANCE.localizeWithReplace("instance" + "" +
+                                ".alreadyinstance", instanceNameField.getText() + "<br/><br/>")), Language.INSTANCE
+                                .localize("common.error"), JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                } else if (!isReinstall && !isServer && instanceNameField.getText().replaceAll("[^A-Za-z0-9]",
-                        "").length() == 0) {
-                    JOptionPane.showMessageDialog(App.settings.getParent(), "<html><p align=\"center\">" + Language
+                } else if (!isReinstall && !isServer && instanceNameField.getText().replaceAll("[^A-Za-z0-9]", "")
+                        .length() == 0) {
+                    JOptionPane.showMessageDialog(App.settings.getParent(), HTMLUtils.centerParagraph(Language
                             .INSTANCE.localize("common.error") + "<br/><br/>" + Language.INSTANCE.localizeWithReplace
-                            ("instance.invalidname", instanceNameField.getText()) +
-                                    "</p></html>", Language.INSTANCE.localize("common.error"),
-                            JOptionPane.ERROR_MESSAGE);
+                            ("instance.invalidname", instanceNameField.getText())), Language.INSTANCE.localize
+                            ("common.error"), JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 final PackVersion version = (PackVersion) versionsDropDown.getSelectedItem();
@@ -242,8 +275,8 @@ public class InstanceInstallerDialog extends JDialog {
 
                 JPanel topPanel = new JPanel();
                 topPanel.setLayout(new BorderLayout());
-                final JLabel doing = new JLabel(Language.INSTANCE.localizeWithReplace("instance.startingprocess",
-                        ((isReinstall) ? Language.INSTANCE.localize("common.reinstall") : Language.INSTANCE.localize
+                final JLabel doing = new JLabel(Language.INSTANCE.localizeWithReplace("instance.startingprocess", (
+                        (isReinstall) ? Language.INSTANCE.localize("common.reinstall") : Language.INSTANCE.localize
                                 ("common.install"))));
                 doing.setHorizontalAlignment(JLabel.CENTER);
                 doing.setVerticalAlignment(JLabel.TOP);
@@ -263,7 +296,7 @@ public class InstanceInstallerDialog extends JDialog {
                 dialog.add(bottomPanel, BorderLayout.SOUTH);
 
                 final InstanceInstaller instanceInstaller = new InstanceInstaller((isServer ? "" : instanceNameField
-                        .getText()), pack, version, isReinstall, isServer) {
+                        .getText()), pack, version, isReinstall, isServer, shareCode, showModsChooser) {
 
                     protected void done() {
                         Boolean success = false;
@@ -330,13 +363,12 @@ public class InstanceInstallerDialog extends JDialog {
 
                                 } else {
                                     Instance newInstance = new Instance(instanceNameField.getText(), pack.getName(),
-                                            pack, installForMe.isSelected(), version.getVersion(),
-                                            version.getMinecraftVersion().getVersion(), this.getMemory(),
-                                            this.getPermGen(), this.getModsInstalled(), this.getJarOrder(),
-                                            this.getLibrariesNeeded(), this.getExtraArguments(),
-                                            this.getMinecraftArguments(), this.getMainClass(),
-                                            version.getMinecraftVersion().getMojangVersion().getAssets(),
-                                            version.isDev(), !version.getMinecraftVersion().isLegacy());
+                                            pack, enableUserLock.isSelected(), version.getVersion(), version
+                                            .getMinecraftVersion().getVersion(), this.getMemory(), this.getPermGen(),
+                                            this.getModsInstalled(), this.getJarOrder(), this.getLibrariesNeeded(),
+                                            this.getExtraArguments(), this.getMinecraftArguments(), this.getMainClass
+                                            (), version.getMinecraftVersion().getMojangVersion().getAssets(), version
+                                            .isDev(), !version.getMinecraftVersion().isLegacy());
 
                                     if (version.isDev() && (version.getHash() != null)) {
                                         newInstance.setHash(version.getHash());
@@ -389,8 +421,7 @@ public class InstanceInstallerDialog extends JDialog {
 
                         Utils.cleanTempDirectory();
 
-                        JOptionPane.showMessageDialog(App.settings.getParent(), "<html><p align=\"center\">" + text +
-                                "</p></html>", title, type);
+                        JOptionPane.showMessageDialog(App.settings.getParent(), HTMLUtils.centerParagraph(text), title, type);
                     }
 
                 };
