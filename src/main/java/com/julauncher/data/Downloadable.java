@@ -44,7 +44,7 @@ public class Downloadable {
     private int size;
     private HttpURLConnection connection;
     private InstanceInstaller instanceInstaller;
-    private boolean isATLauncherDownload;
+    private boolean isJULauncherDownload;
     private File copyTo;
     private boolean actuallyCopy;
     private int attempts = 0;
@@ -52,8 +52,8 @@ public class Downloadable {
     private Server server;
 
     public Downloadable(String url, File file, String hash, int size, InstanceInstaller instanceInstaller, boolean
-            isATLauncherDownload, File copyTo, boolean actuallyCopy) {
-        if (isATLauncherDownload) {
+            isJULauncherDownload, File copyTo, boolean actuallyCopy) {
+        if (isJULauncherDownload) {
             this.servers = new ArrayList<Server>(App.settings.getServers());
             this.server = this.servers.get(0);
             for (Server server : this.servers) {
@@ -71,27 +71,27 @@ public class Downloadable {
         this.hash = hash;
         this.size = size;
         this.instanceInstaller = instanceInstaller;
-        this.isATLauncherDownload = isATLauncherDownload;
+        this.isJULauncherDownload = isJULauncherDownload;
         this.copyTo = copyTo;
         this.actuallyCopy = actuallyCopy;
     }
 
     public Downloadable(String url, File file, String hash, int size, InstanceInstaller instanceInstaller, boolean
-            isATLauncherDownload) {
-        this(url, file, hash, size, instanceInstaller, isATLauncherDownload, null, false);
+            isJULauncherDownload) {
+        this(url, file, hash, size, instanceInstaller, isJULauncherDownload, null, false);
     }
 
     public Downloadable(String url, File file, String hash, InstanceInstaller instanceInstaller, boolean
-            isATLauncherDownload) {
-        this(url, file, hash, -1, instanceInstaller, isATLauncherDownload, null, false);
+            isJULauncherDownload) {
+        this(url, file, hash, -1, instanceInstaller, isJULauncherDownload, null, false);
     }
 
     public Downloadable(String url, File file) {
         this(url, file, null, -1, null, false, null, false);
     }
 
-    public Downloadable(String url, boolean isATLauncherDownload) {
-        this(url, null, null, -1, null, isATLauncherDownload, null, false);
+    public Downloadable(String url, boolean isJULauncherDownload) {
+        this(url, null, null, -1, null, isJULauncherDownload, null, false);
     }
 
     public String getFilename() {
@@ -234,7 +234,7 @@ public class Downloadable {
             } catch (IOException e) {
                 LogManager.debug("Exception when opening connection to " + this.url, 3);
                 App.settings.logStackTrace(e);
-                if (this.isATLauncherDownload) {
+                if (this.isJULauncherDownload) {
                     if (getNextServer()) {
                         this.url = server.getFileURL(this.beforeURL);
                         this.connection = null;
@@ -402,7 +402,7 @@ public class Downloadable {
                 downloadFile(downloadAsLibrary); // Keep downloading file until it matches MD5
             }
             if (!done) {
-                if (this.isATLauncherDownload) {
+                if (this.isJULauncherDownload) {
                     if (getNextServer()) {
                         LogManager.warn("Error downloading " + this.file.getName() + " from " + this.url + ". " +
                                 "Expected hash of " + getHash() + " but got " + fileHash + " instead. Trying another " +

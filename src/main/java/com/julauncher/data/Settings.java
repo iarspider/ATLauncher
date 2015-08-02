@@ -31,7 +31,7 @@ import com.julauncher.gui.tabs.InstancesTab;
 import com.julauncher.gui.tabs.NewsTab;
 import com.julauncher.gui.tabs.PacksTab;
 import com.julauncher.thread.LoggingThread;
-import com.julauncher.utils.ATLauncherAPIUtils;
+import com.julauncher.utils.JULauncherAPIUtils;
 import com.julauncher.utils.HTMLUtils;
 import com.julauncher.utils.MojangAPIUtils;
 import com.julauncher.utils.Timestamper;
@@ -336,7 +336,7 @@ public class Settings {
             App.TASKPOOL.execute(new Runnable() {
                 @Override
                 public void run() {
-                    ATLauncherAPIUtils.postSystemInfo();
+                    JULauncherAPIUtils.postSystemInfo();
                 }
             });
         }
@@ -636,7 +636,7 @@ public class Settings {
     }
 
     public boolean launcherHasBetaUpdate() {
-        Downloadable downloadable = new Downloadable("https://api.atlauncher.com/v1/build/atlauncher/build/", false);
+        Downloadable downloadable = new Downloadable("https://iarazumov.com/api/v1/build/julauncher/build/", false);
         APIResponseInt response = Gsons.DEFAULT.fromJson(downloadable.getContents(), APIResponseInt.class);
         return response.getData() > Constants.VERSION.getBuild();
     }
@@ -677,7 +677,7 @@ public class Settings {
             }
             File newFile = new File(getTempDir(), saveAs);
             LogManager.info("Downloading Launcher Update");
-            Downloadable update = new Downloadable("https://api.atlauncher.com/v1/build/atlauncher/download/" +
+            Downloadable update = new Downloadable("https://iarazumov.com/api/v1/build/julauncher/download/" +
                     toget, newFile, null, null, false);
             update.download(false);
             runUpdate(path, newFile.getAbsolutePath());
@@ -845,7 +845,7 @@ public class Settings {
                         "page.<br/><br/>Download " + "the update and replace the old " + Constants.LAUNCHER_NAME + " " +
                         "file."), "Update Failed!", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null,
                         options, options[0]);
-                Utils.openBrowser("http://www.atlauncher.com/downloads/");
+                Utils.openBrowser("http://iarazumov.com/jul/downloads/");
                 System.exit(0);
             }
         } else if (Constants.VERSION.isBeta() && launcherHasBetaUpdate()) {

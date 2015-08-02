@@ -30,7 +30,7 @@ public class LauncherLibrary {
     private String url;
     private String version;
     private String md5;
-    private boolean atlauncherDownload;
+    private boolean julauncherDownload;
     private boolean autoLoad;
     private boolean exitOnFail;
 
@@ -56,15 +56,15 @@ public class LauncherLibrary {
 
     public Downloadable getDownloadable() {
         return new Downloadable(this.url, new File(App.settings.getLauncherLibrariesDir(), this.filename), this.md5,
-                null, this.atlauncherDownload);
+                null, this.julauncherDownload);
     }
 
     public String getMd5() {
         return this.md5;
     }
 
-    public boolean isATLauncherDownload() {
-        return this.atlauncherDownload;
+    public boolean isJULauncherDownload() {
+        return this.julauncherDownload;
     }
 
     public boolean shouldAutoLoad() {
